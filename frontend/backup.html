@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Backup</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">K</div>
+                    <div class="brand-text">
+                        <h2>Kirana ERP</h2><span>Business Suite</span>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <div class="sidebar-section-label">Main Menu</div>
+                <a href="index.html"><span class="nav-icon">⊞</span> Dashboard</a>
+                <a href="billing.html"><span class="nav-icon">🧾</span> POS Billing</a>
+                <a href="products.html"><span class="nav-icon">📦</span> Products</a>
+                <a href="categories.html"><span class="nav-icon">🏷️</span> Categories</a>
+                <a href="customers.html"><span class="nav-icon">👥</span> Customers</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Purchase</div>
+                <a href="purchase-orders.html"><span class="nav-icon">📋</span> Purchase Orders</a>
+                <a href="purchases.html"><span class="nav-icon">🛒</span> Purchases</a>
+                <a href="purchase-returns.html"><span class="nav-icon">↩️</span> Purchase Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Sales</div>
+                <a href="sale-orders.html"><span class="nav-icon">📑</span> Sale Orders</a>
+                <a href="sales.html"><span class="nav-icon">📊</span> Sales History</a>
+                <a href="sale-returns.html"><span class="nav-icon">🔄</span> Sale Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Finance</div>
+                <a href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+                <a href="profit-loss.html"><span class="nav-icon">💹</span> Profit &amp; Loss</a>
+                <a href="register.html"><span class="nav-icon">🗃️</span> Register</a>
+                <a href="settings-invoice.html"><span class="nav-icon">⚙️</span> Invoice Settings</a>
+                <a href="backup.html" class="active"><span class="nav-icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="store-avatar">S</div>
+                    <div class="store-info">
+                        <h4>Store Admin</h4><span>Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="main">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h3>Data Backup</h3>
+                    <div class="breadcrumb">Protect your business data</div>
+                </div>
+            </div>
+            <div class="content">
+                <div class="grid" style="grid-template-columns:1fr 1fr;gap:18px;" class="mb-20">
+                    <!-- Backup Card -->
+                    <div class="glass-card" style="padding:20px 22px; margin-bottom:18px;">
+                        <div class="card-header mb-16">
+                            <div>
+                                <div class="card-title">💾 Create Backup</div>
+                                <div class="card-subtitle">Save a snapshot of all your data</div>
+                            </div>
+                        </div>
+                        <div
+                            style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;margin-bottom:20px;font-size:13px;line-height:1.8;color:var(--text-secondary);">
+                            <strong style="color:var(--text-primary);">What gets backed up:</strong><br>
+                            ✅ All products, categories & pricing<br>
+                            ✅ Customer records & credit balances<br>
+                            ✅ Complete sales & purchase history<br>
+                            ✅ Stock levels & adjustments<br>
+                            ✅ Register sessions
+                        </div>
+                        <button class="btn btn-primary" onclick="createBackup()" style="width:100%;">💾 Create Backup
+                            Now</button>
+                        <div id="backupResult" style="margin-top:12px;display:none;"></div>
+                    </div>
+
+                    <!-- Info Card -->
+                    <div class="glass-card" style="padding:20px 22px; margin-bottom:18px;">
+                        <div class="card-header mb-16">
+                            <div>
+                                <div class="card-title">ℹ️ Backup Info</div>
+                                <div class="card-subtitle">Best practices</div>
+                            </div>
+                        </div>
+                        <div style="font-size:13px;line-height:2;color:var(--text-secondary);">
+                            <div
+                                style="margin-bottom:12px;padding:10px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:var(--r-sm);">
+                                <strong style="color:var(--accent);">📁 Backup Location</strong><br>
+                                Backup files are saved in the server's <code
+                                    style="background:var(--bg-elevated);padding:2px 6px;border-radius:4px;">src/</code>
+                                directory.
+                            </div>
+                            <div
+                                style="margin-bottom:12px;padding:10px;background:rgba(16,217,160,0.08);border:1px solid rgba(16,217,160,0.2);border-radius:var(--r-sm);">
+                                <strong style="color:var(--success);">✅ Recommendation</strong><br>
+                                Back up daily at end of business. Copy backup files to external storage (USB or cloud).
+                            </div>
+                            <div
+                                style="padding:10px;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.2);border-radius:var(--r-sm);">
+                                <strong style="color:var(--warning);">⚠️ Important</strong><br>
+                                Close the register before backup for accurate data.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backup Log -->
+                <div class="glass-card" style="padding:20px 22px; margin-bottom:18px;">
+                    <div class="card-header mb-16">
+                        <div>
+                            <div class="card-title">Backup Log</div>
+                            <div class="card-subtitle">Recent backup operations</div>
+                        </div>
+                    </div>
+                    <div id="backupLog"
+                        style="min-height:120px;font-family:monospace;font-size:12.5px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;line-height:2;color:var(--text-muted);">
+                        No backups created yet. Click "Create Backup Now" to get started.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="toast-container" id="toastContainer"></div>
+    <script>
+        const backupLog = [];
+        function showToast(msg, type = 'info') { const el = document.createElement('div'); el.className = `toast ${type}`; el.innerHTML = `<span>${{ success: '✅', error: '❌', info: 'ℹ️' }[type]}</span><span class="toast-msg">${msg}</span>`; document.getElementById('toastContainer').appendChild(el); setTimeout(() => el.remove(), 3500); }
+
+        async function createBackup() {
+            const btn = document.querySelector('button[onclick="createBackup()"]');
+            btn.textContent = '⏳ Creating backup...'; btn.disabled = true;
+            try {
+                const res = await fetch('/api/v1/backup');
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Backup failed');
+                const timestamp = new Date().toLocaleString('en-IN');
+                backupLog.unshift({ time: timestamp, file: data.file, status: 'SUCCESS' });
+                showToast('Backup created: ' + data.file, 'success');
+                document.getElementById('backupResult').style.display = 'block';
+                document.getElementById('backupResult').innerHTML = `
+            <div style="padding:12px;background:rgba(16,217,160,0.1);border:1px solid var(--success);border-radius:var(--r-sm);font-size:13px;">
+                ✅ <strong>Backup Successful!</strong><br>
+                File: <code style="background:var(--bg-elevated);padding:2px 6px;border-radius:4px;">${data.file}</code><br>
+                Time: ${timestamp}
+            </div>`;
+                renderLog();
+            } catch (e) {
+                showToast(e.message, 'error');
+                backupLog.unshift({ time: new Date().toLocaleString('en-IN'), file: '—', status: 'FAILED' });
+                renderLog();
+            }
+            btn.textContent = '💾 Create Backup Now'; btn.disabled = false;
+        }
+
+        function renderLog() {
+            const logEl = document.getElementById('backupLog');
+            if (!backupLog.length) { logEl.textContent = 'No backups created yet.'; return; }
+            logEl.innerHTML = backupLog.map(b => {
+                const color = b.status === 'SUCCESS' ? 'var(--success)' : 'var(--danger)';
+                return `<div>[${b.time}] <span style="color:${color};font-weight:600;">${b.status}</span> — ${b.file}</div>`;
+            }).join('');
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Purchases</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">K</div>
+                    <div class="brand-text">
+                        <h2>Kirana ERP</h2><span>Business Suite</span>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <div class="sidebar-section-label">Main Menu</div>
+                <a href="index.html"><span class="nav-icon">⊞</span> Dashboard</a>
+                <a href="billing.html"><span class="nav-icon">🧾</span> POS Billing</a>
+                <a href="products.html"><span class="nav-icon">📦</span> Products</a>
+                <a href="categories.html"><span class="nav-icon">🏷️</span> Categories</a>
+                <a href="customers.html"><span class="nav-icon">👥</span> Customers</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Purchase</div>
+                <a href="purchase-orders.html"><span class="nav-icon">📋</span> Purchase Orders</a>
+                <a href="purchases.html" class="active"><span class="nav-icon">🛒</span> Purchases</a>
+                <a href="purchase-returns.html"><span class="nav-icon">↩️</span> Purchase Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Sales</div>
+                <a href="sale-orders.html"><span class="nav-icon">📑</span> Sale Orders</a>
+                <a href="sales.html"><span class="nav-icon">📊</span> Sales History</a>
+                <a href="sale-returns.html"><span class="nav-icon">🔄</span> Sale Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Finance</div>
+                <a href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+                <a href="profit-loss.html"><span class="nav-icon">💹</span> Profit &amp; Loss</a>
+                <a href="register.html"><span class="nav-icon">🗃️</span> Register</a>
+                <a href="settings-invoice.html"><span class="nav-icon">⚙️</span> Invoice Settings</a>
+                <a href="backup.html"><span class="nav-icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="store-avatar">S</div>
+                    <div class="store-info">
+                        <h4>Store Admin</h4><span>Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="main">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h3>Purchases</h3>
+                    <div class="breadcrumb">Record stock purchases from suppliers</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="status-pill"><span class="status-dot online"></span><span
+                            style="color:var(--success)">Online</span></div>
+                    <a href="purchase-orders.html" class="btn btn-outline btn-sm">📋 Purchase Orders</a>
+                    <button class="btn btn-primary" onclick="openAddModal()">+ New Purchase</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="grid grid-4 mb-20">
+                    <div class="stat-card blue"><span class="stat-icon">🛒</span>
+                        <div class="stat-label">Total Purchases</div>
+                        <div class="stat-value" id="stat-total">0</div>
+                    </div>
+                    <div class="stat-card orange"><span class="stat-icon">💰</span>
+                        <div class="stat-label">Total Spent</div>
+                        <div class="stat-value" id="stat-spent">₹0</div>
+                    </div>
+                    <div class="stat-card green"><span class="stat-icon">📦</span>
+                        <div class="stat-label">This Month</div>
+                        <div class="stat-value" id="stat-month">₹0</div>
+                    </div>
+                    <div class="stat-card red"><span class="stat-icon">📋</span>
+                        <div class="stat-label">Credit (Unpaid)</div>
+                        <div class="stat-value" id="stat-credit">₹0</div>
+                    </div>
+                </div>
+                <div class="glass-card" style="padding:20px 22px; margin-bottom:18px;">
+                    <div class="card-header mb-16">
+                        <div>
+                            <div class="card-title">Purchase History</div>
+                            <div class="card-subtitle" id="tableCount">Loading...</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Purchase #</th>
+                                    <th>Supplier</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Cash Paid</th>
+                                    <th>Credit</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="purchaseTable">
+                                <tr>
+                                    <td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);">
+                                        Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Purchase Modal -->
+    <div class="modal-overlay" id="purchaseModal">
+        <div class="modal" style="max-width:680px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">New Purchase</div>
+                    <div class="modal-subtitle">Record stock received from supplier</div>
+                </div><button class="modal-close" onclick="closeModal('purchaseModal')">✕</button>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Supplier Name</label><input type="text" id="pur_supplier"
+                        placeholder="Supplier / Party name"></div>
+                <div class="form-group"><label>Phone</label><input type="text" id="pur_phone" placeholder="Optional">
+                </div>
+            </div>
+            <div id="purItemsContainer"></div>
+            <button class="btn btn-outline btn-sm" style="margin-bottom:12px;" onclick="addPurItem()">+ Add
+                Item</button>
+            <div class="form-row">
+                <div class="form-group"><label>Cash Paid (₹)</label><input type="number" id="pur_cash" placeholder="0"
+                        oninput="calcPurTotals()"></div>
+                <div class="form-group"><label>Notes</label><input type="text" id="pur_notes" placeholder="Optional">
+                </div>
+            </div>
+            <div
+                style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:12px;font-size:13px;">
+                Total: <strong id="purTotal">₹0</strong> &nbsp;|&nbsp; Credit: <strong id="purCredit"
+                    style="color:var(--danger);">₹0</strong>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('purchaseModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="savePurchase()">💾 Save Purchase</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Items Modal -->
+    <div class="modal-overlay" id="itemsModal">
+        <div class="modal" style="max-width:600px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="itemsTitle">Purchase Items</div>
+                </div><button class="modal-close" onclick="closeModal('itemsModal')">✕</button>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Purchase Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTable"></tbody>
+                </table>
+            </div>
+            <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('itemsModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script>
+        let allPurchases = [], allProducts = [], purItemCount = 0;
+        function showToast(msg, type = 'info') { const el = document.createElement('div'); el.className = `toast ${type}`; el.innerHTML = `<span>${{ success: '✅', error: '❌', info: 'ℹ️' }[type]}</span><span class="toast-msg">${msg}</span>`; document.getElementById('toastContainer').appendChild(el); setTimeout(() => el.remove(), 3500); }
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        async function loadData() {
+            const [purRes, prodRes] = await Promise.all([fetch('/api/v1/purchases?limit=200'), fetch('/api/v1/products?limit=200')]);
+            const purJson = await purRes.json(); const prodJson = await prodRes.json();
+            allPurchases = purJson?.data?.data || purJson?.data || purJson; allProducts = prodJson?.data?.data || prodJson?.data || prodJson;
+            const total = allPurchases.reduce((s, p) => s + p.total_amount, 0);
+            const credit = allPurchases.reduce((s, p) => s + p.credit_amount, 0);
+            const month = allPurchases.filter(p => p.created_at_local && p.created_at_local.startsWith(new Date().toISOString().slice(0, 7))).reduce((s, p) => s + p.total_amount, 0);
+            document.getElementById('stat-total').textContent = allPurchases.length;
+            document.getElementById('stat-spent').textContent = '₹' + total.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            document.getElementById('stat-month').textContent = '₹' + month.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            document.getElementById('stat-credit').textContent = '₹' + credit.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            document.getElementById('tableCount').textContent = allPurchases.length + ' purchases';
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('purchaseTable');
+            if (!allPurchases.length) { tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><span class="empty-state-icon">🛒</span><h4>No purchases yet</h4></div></td></tr>`; return; }
+            const fmt = n => '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            tbody.innerHTML = allPurchases.map(p => `<tr>
+        <td style="font-family:monospace;font-size:12px;">${p.purchase_number}</td>
+        <td class="td-primary">${p.supplier_name}</td>
+        <td><span class="badge badge-info">${p.item_count} items</span></td>
+        <td class="td-amount">${fmt(p.total_amount)}</td>
+        <td class="text-success">${fmt(p.cash_paid)}</td>
+        <td class="${p.credit_amount > 0 ? 'text-danger' : 'text-muted'}">${fmt(p.credit_amount)}</td>
+        <td style="font-size:11.5px;color:var(--text-muted);">${p.created_at_local ? p.created_at_local.split(' ')[0] : '—'}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="viewItems(${p.id},'${p.purchase_number}')">👁 View</button></td>
+    </tr>`).join('');
+        }
+
+        function openAddModal() {
+            purItemCount = 0; document.getElementById('purItemsContainer').innerHTML = '';
+            document.getElementById('pur_supplier').value = ''; document.getElementById('pur_phone').value = '';
+            document.getElementById('pur_cash').value = ''; document.getElementById('pur_notes').value = '';
+            document.getElementById('purTotal').textContent = '₹0'; document.getElementById('purCredit').textContent = '₹0';
+            addPurItem(); openModal('purchaseModal');
+        }
+
+        function addPurItem() {
+            const id = 'purItem_' + purItemCount++;
+            const opts = allProducts.map(p => `<option value="${p.id}" data-price="${p.cost_price}">${p.name} (Stock:${p.stock_quantity})</option>`).join('');
+            const div = document.createElement('div'); div.id = id; div.style = 'display:grid;grid-template-columns:2fr 1fr 1fr 36px;gap:8px;margin-bottom:8px;align-items:end;';
+            div.innerHTML = `
+        <div class="form-group" style="margin:0;"><label style="font-size:11px;">Product</label><select class="pur-prod" onchange="fillPurPrice(this)">${opts}</select></div>
+        <div class="form-group" style="margin:0;"><label style="font-size:11px;">Qty</label><input type="number" class="pur-qty" value="1" min="1" oninput="calcPurTotals()"></div>
+        <div class="form-group" style="margin:0;"><label style="font-size:11px;">Purchase Price</label><input type="number" class="pur-price" placeholder="0" oninput="calcPurTotals()"></div>
+        <button class="btn btn-danger btn-sm" style="height:36px;" onclick="document.getElementById('${id}').remove();calcPurTotals();">✕</button>`;
+            document.getElementById('purItemsContainer').appendChild(div);
+            // Fill price from first option
+            const sel = div.querySelector('.pur-prod');
+            const opt = sel.options[sel.selectedIndex];
+            if (opt) div.querySelector('.pur-price').value = opt.dataset.price || 0;
+        }
+
+        function fillPurPrice(sel) {
+            const opt = sel.options[sel.selectedIndex];
+            sel.closest('div').parentElement.querySelector('.pur-price').value = opt.dataset.price || 0;
+            calcPurTotals();
+        }
+
+        function calcPurTotals() {
+            let total = 0;
+            document.querySelectorAll('#purItemsContainer > div').forEach(row => {
+                const qty = parseFloat(row.querySelector('.pur-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.pur-price').value) || 0;
+                total += qty * price;
+            });
+            const cash = parseFloat(document.getElementById('pur_cash').value) || 0;
+            const credit = Math.max(0, total - cash);
+            document.getElementById('purTotal').textContent = '₹' + total.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+            document.getElementById('purCredit').textContent = '₹' + credit.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        }
+
+        async function savePurchase() {
+            const items = [];
+            let valid = true;
+            document.querySelectorAll('#purItemsContainer > div').forEach(row => {
+                const product_id = parseInt(row.querySelector('.pur-prod').value);
+                const quantity = parseInt(row.querySelector('.pur-qty').value) || 0;
+                const purchase_price = parseFloat(row.querySelector('.pur-price').value) || 0;
+                if (!product_id || quantity <= 0) { valid = false; return; }
+                items.push({ product_id, quantity, purchase_price });
+            });
+            if (!valid || !items.length) return showToast('Add valid items', 'error');
+            const cash_paid = parseFloat(document.getElementById('pur_cash').value) || 0;
+            const total = items.reduce((s, i) => s + i.quantity * i.purchase_price, 0);
+            const payload = {
+                supplier_name: document.getElementById('pur_supplier').value.trim() || 'Unknown',
+                supplier_phone: document.getElementById('pur_phone').value.trim() || null,
+                items, cash_paid, credit_amount: Math.max(0, total - cash_paid),
+                notes: document.getElementById('pur_notes').value.trim() || null
+            };
+            const res = await fetch('/api/v1/add-purchase', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const json = await res.json();
+            if (!res.ok) return showToast(json.message || json.error || 'Failed', 'error');
+            const data = json?.data || json;
+            showToast('Purchase recorded: ' + data.purchase_number, 'success');
+            closeModal('purchaseModal'); loadData();
+        }
+
+        async function viewItems(id, num) {
+            const res = await fetch('/api/v1/purchase-items/' + id);
+            let itemsJson = await res.json();
+            const items = itemsJson?.data?.data || itemsJson?.data || itemsJson;
+            document.getElementById('itemsTitle').textContent = 'Items — ' + num;
+            document.getElementById('itemsTable').innerHTML = items.map(i => `<tr>
+        <td class="td-primary">${i.product_name || '—'}</td>
+        <td>${i.quantity}</td>
+        <td>₹${parseFloat(i.purchase_price).toFixed(2)}</td>
+        <td class="td-amount">₹${(i.quantity * i.purchase_price).toFixed(2)}</td>
+    </tr>`).join('');
+            openModal('itemsModal');
+        }
+        loadData();
+    </script>
+</body>
+
+</html>

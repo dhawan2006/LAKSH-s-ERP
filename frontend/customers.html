@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Customers</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+    <div class="app">
+
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">K</div>
+                    <div class="brand-text">
+                        <h2>Kirana ERP</h2><span>Business Suite</span>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <div class="sidebar-section-label">Main Menu</div>
+                <a href="index.html"><span class="nav-icon">⊞</span> Dashboard</a>
+                <a href="billing.html"><span class="nav-icon">🧾</span> POS Billing</a>
+                <a href="products.html"><span class="nav-icon">📦</span> Products</a>
+                <a href="categories.html"><span class="nav-icon">🏷️</span> Categories</a>
+                <a href="customers.html" class="active"><span class="nav-icon">👥</span> Customers</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Purchase</div>
+                <a href="purchase-orders.html"><span class="nav-icon">📋</span> Purchase Orders</a>
+                <a href="purchases.html"><span class="nav-icon">🛒</span> Purchases</a>
+                <a href="purchase-returns.html"><span class="nav-icon">↩️</span> Purchase Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Sales</div>
+                <a href="sale-orders.html"><span class="nav-icon">📑</span> Sale Orders</a>
+                <a href="sales.html"><span class="nav-icon">📊</span> Sales History</a>
+                <a href="sale-returns.html"><span class="nav-icon">🔄</span> Sale Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Finance</div>
+                <a href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+                <a href="profit-loss.html"><span class="nav-icon">💹</span> Profit &amp; Loss</a>
+                <a href="register.html"><span class="nav-icon">🗃️</span> Register</a>
+                <a href="settings-invoice.html"><span class="nav-icon">⚙️</span> Invoice Settings</a>
+                <a href="backup.html"><span class="nav-icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="store-avatar">S</div>
+                    <div class="store-info">
+                        <h4>Store Admin</h4><span>Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="main">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h3>Customer Management</h3>
+                    <div class="breadcrumb">Manage customers & udhaar (credit)</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="status-pill"><span class="status-dot online"></span><span
+                            style="color:var(--success)">Online</span></div>
+                    <button class="btn btn-outline btn-sm" onclick="exportCSV()">⬇️ Export</button>
+                    <button class="btn btn-primary" onclick="openAddModal()">+ Add Customer</button>
+                </div>
+            </div>
+
+            <div class="content">
+
+                <div class="grid grid-4 mb-20">
+                    <div class="stat-card blue">
+                        <span class="stat-icon">👥</span>
+                        <div class="stat-label">Total Customers</div>
+                        <div class="stat-value" id="stat-total">0</div>
+                    </div>
+                    <div class="stat-card red">
+                        <span class="stat-icon">⚠️</span>
+                        <div class="stat-label">With Udhaar</div>
+                        <div class="stat-value" id="stat-credit-count">0</div>
+                    </div>
+                    <div class="stat-card orange">
+                        <span class="stat-icon">💰</span>
+                        <div class="stat-label">Total Pending</div>
+                        <div class="stat-value" id="stat-total-credit">₹0</div>
+                    </div>
+                    <div class="stat-card green">
+                        <span class="stat-icon">✅</span>
+                        <div class="stat-label">Clear Accounts</div>
+                        <div class="stat-value" id="stat-clear">0</div>
+                    </div>
+                </div>
+
+                <div class="glass-card" style="padding:20px 22px; margin-bottom:16px;" style="padding:16px;">
+                    <div class="filters-bar">
+                        <div class="search-bar" style="flex:1;">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchCustomer" placeholder="Search by name or phone..."
+                                oninput="filterCustomers()">
+                        </div>
+                        <select id="creditFilter" class="filter-select" onchange="filterCustomers()">
+                            <option value="">All Customers</option>
+                            <option value="credit">With Pending Credit</option>
+                            <option value="clear">Clear / No Dues</option>
+                        </select>
+                        <select id="sortBy" class="filter-select" onchange="filterCustomers()">
+                            <option value="id">Latest Added</option>
+                            <option value="name">Name A–Z</option>
+                            <option value="credit_desc">Highest Credit</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="glass-card" style="padding:20px 22px; margin-bottom:18px;">
+                    <div class="card-header mb-16">
+                        <div>
+                            <div class="card-title">Customer Directory</div>
+                            <div class="card-subtitle" id="tableCount">Loading...</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Customer Name</th>
+                                    <th>Phone</th>
+                                    <th>Joined</th>
+                                    <th>Udhaar Balance</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customerTable">
+                                <tr>
+                                    <td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted);">
+                                        Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination">
+                        <div class="pagination-info" id="paginationInfo">—</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD / EDIT CUSTOMER MODAL -->
+    <div class="modal-overlay" id="customerModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="customerModalTitle">Add Customer</div>
+                    <div class="modal-subtitle">Customer account details</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('customerModal')">✕</button>
+            </div>
+            <input type="hidden" id="customer_id">
+            <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" id="customer_name" placeholder="e.g. Ramesh Kumar">
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="customer_phone" placeholder="10-digit mobile" maxlength="10">
+            </div>
+            <div class="form-group">
+                <label>Address (optional)</label>
+                <input type="text" id="customer_address" placeholder="Street / Area / City">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('customerModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveCustomer()">💾 Save Customer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAYMENT MODAL -->
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">Record Payment</div>
+                    <div class="modal-subtitle" id="paymentCustomerName">Customer name</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('paymentModal')">✕</button>
+            </div>
+            <input type="hidden" id="payment_customer_id">
+
+            <div
+                style="padding:14px 16px; background:var(--danger-bg); border:1px solid var(--danger-ring); border-radius:var(--r); margin-bottom:16px;">
+                <div
+                    style="font-size:10.5px; text-transform:uppercase; letter-spacing:1.2px; color:var(--danger); margin-bottom:4px; font-weight:600;">
+                    ⚠️ Pending Udhaar</div>
+                <div
+                    style="font-family:'Bricolage Grotesque',sans-serif; font-size:28px; font-weight:800; color:var(--danger);">
+                    ₹<span id="currentCredit">0</span></div>
+            </div>
+
+            <div class="form-group">
+                <label>Payment Amount (₹) *</label>
+                <input type="number" id="paymentAmount" placeholder="0.00" min="0.01" step="0.01">
+            </div>
+
+            <div style="display:flex; gap:8px; margin-bottom:16px;">
+                <button class="btn btn-ghost btn-sm" onclick="payFull()">Pay Full</button>
+                <button class="btn btn-ghost btn-sm" onclick="payHalf()">Pay Half</button>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('paymentModal')">Cancel</button>
+                <button class="btn btn-success" onclick="submitPayment()">✅ Record Payment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOMER LEDGER MODAL -->
+    <div class="modal-overlay" id="ledgerModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">📒 Customer Ledger</div>
+                    <div class="modal-subtitle" id="ledgerCustomerName">Transaction history</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('ledgerModal')">✕</button>
+            </div>
+            <div id="ledgerContent"></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('ledgerModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        let allCustomers = [];
+
+        function showToast(msg, type = 'info') {
+            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.innerHTML = `<span>${icons[type]}</span><span class="toast-msg">${msg}</span>`;
+            document.getElementById('toastContainer').appendChild(el);
+            setTimeout(() => el.remove(), 3500);
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        async function loadCustomers() {
+            try {
+                const res = await fetch('/api/v1/customers?limit=200');
+                const json = await res.json();
+                allCustomers = json?.data?.data || json?.data || json;
+                updateStats();
+                filterCustomers();
+            } catch (e) {
+                showToast('Failed to load customers', 'error');
+            }
+        }
+
+        function updateStats() {
+            const withCredit = allCustomers.filter(c => c.credit_balance > 0);
+            const totalCredit = withCredit.reduce((s, c) => s + c.credit_balance, 0);
+            document.getElementById('stat-total').textContent = allCustomers.length;
+            document.getElementById('stat-credit-count').textContent = withCredit.length;
+            document.getElementById('stat-total-credit').textContent = '₹' + totalCredit.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            document.getElementById('stat-clear').textContent = allCustomers.filter(c => c.credit_balance <= 0).length;
+        }
+
+        function filterCustomers() {
+            const kw = document.getElementById('searchCustomer').value.toLowerCase();
+            const creditF = document.getElementById('creditFilter').value;
+            const sortBy = document.getElementById('sortBy').value;
+
+            let list = allCustomers.filter(c =>
+                c.name.toLowerCase().includes(kw) || (c.phone || '').includes(kw)
+            );
+
+            if (creditF === 'credit') list = list.filter(c => c.credit_balance > 0);
+            if (creditF === 'clear') list = list.filter(c => c.credit_balance <= 0);
+
+            if (sortBy === 'name') list.sort((a, b) => a.name.localeCompare(b.name));
+            if (sortBy === 'credit_desc') list.sort((a, b) => b.credit_balance - a.credit_balance);
+
+            document.getElementById('tableCount').textContent = list.length + ' customers';
+            document.getElementById('paginationInfo').textContent = `Showing ${list.length} of ${allCustomers.length} customers`;
+
+            const tbody = document.getElementById('customerTable');
+            if (!list.length) {
+                tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><span class="empty-state-icon">👥</span>
+            <h4>No customers found</h4></div></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map(c => {
+                const hasCredit = c.credit_balance > 0;
+                return `<tr>
+            <td class="text-muted" style="font-size:12px;">#${c.id}</td>
+            <td class="td-primary">${c.name}</td>
+            <td>${c.phone || '<span class="text-muted">—</span>'}</td>
+            <td style="font-size:12px; color:var(--text-muted);">${c.created_at ? new Date(c.created_at).toLocaleDateString('en-IN') : '—'}</td>
+            <td class="${hasCredit ? 'text-danger' : 'text-muted'}" style="font-weight:${hasCredit ? '700' : '400'};">
+                ₹${parseFloat(c.credit_balance || 0).toFixed(2)}
+            </td>
+            <td>${hasCredit
+                        ? `<span class="badge badge-danger">Has Udhaar</span>`
+                        : `<span class="badge badge-success">Clear</span>`}
+            </td>
+            <td>
+                <div class="flex gap-6">
+                    <button class="btn btn-ghost btn-sm" onclick="editCustomer(${c.id})" title="Edit">✏️</button>
+                    ${hasCredit ? `<button class="btn btn-success btn-sm" onclick="openPaymentModal(${c.id}, ${c.credit_balance}, '${c.name.replace(/'/g, "\\'")}')">💰 Pay</button>` : ''}
+                    <button class="btn btn-outline btn-sm" onclick="viewLedger(${c.id})">📒 Ledger</button>
+                </div>
+            </td>
+        </tr>`;
+            }).join('');
+        }
+
+        function openAddModal() {
+            document.getElementById('customerModalTitle').textContent = 'Add Customer';
+            document.getElementById('customer_id').value = '';
+            document.getElementById('customer_name').value = '';
+            document.getElementById('customer_phone').value = '';
+            document.getElementById('customer_address').value = '';
+            openModal('customerModal');
+        }
+
+        function editCustomer(id) {
+            const c = allCustomers.find(c => c.id == id);
+            document.getElementById('customerModalTitle').textContent = 'Edit Customer';
+            document.getElementById('customer_id').value = c.id;
+            document.getElementById('customer_name').value = c.name;
+            document.getElementById('customer_phone').value = c.phone || '';
+            document.getElementById('customer_address').value = c.address || '';
+            openModal('customerModal');
+        }
+
+        async function saveCustomer() {
+            const id = document.getElementById('customer_id').value;
+            const name = document.getElementById('customer_name').value.trim();
+            const phone = document.getElementById('customer_phone').value.trim();
+            const address = document.getElementById('customer_address').value.trim();
+
+            if (!name) return showToast('Customer name is required', 'error');
+
+            const url = id ? `/api/v1/update-customer/${id}` : '/api/v1/add-customer';
+            const method = id ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method, headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone, address }),
+            });
+
+            if (res.ok) {
+                showToast(id ? 'Customer updated!' : 'Customer added!', 'success');
+                closeModal('customerModal');
+                loadCustomers();
+            } else {
+                const d = await res.json();
+                showToast(d.message || d.error || 'Save failed', 'error');
+            }
+        }
+
+        function openPaymentModal(id, credit, name) {
+            document.getElementById('payment_customer_id').value = id;
+            document.getElementById('currentCredit').textContent = parseFloat(credit).toFixed(2);
+            document.getElementById('paymentCustomerName').textContent = name;
+            document.getElementById('paymentAmount').value = '';
+            openModal('paymentModal');
+        }
+
+        function payFull() {
+            document.getElementById('paymentAmount').value = document.getElementById('currentCredit').textContent;
+        }
+
+        function payHalf() {
+            const full = parseFloat(document.getElementById('currentCredit').textContent);
+            document.getElementById('paymentAmount').value = (full / 2).toFixed(2);
+        }
+
+        async function submitPayment() {
+            const customer_id = document.getElementById('payment_customer_id').value;
+            const amount = parseFloat(document.getElementById('paymentAmount').value);
+
+            if (!amount || amount <= 0) return showToast('Enter a valid amount', 'error');
+
+            const res = await fetch('/api/v1/add-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customer_id, amount }),
+            });
+
+            const d = await res.json();
+            if (res.ok) {
+                showToast(`Payment of ₹${amount.toFixed(2)} recorded!`, 'success');
+                closeModal('paymentModal');
+                loadCustomers();
+            } else {
+                showToast(d.message || d.error || 'Payment failed', 'error');
+            }
+        }
+
+        async function viewLedger(customerId) {
+            const customer = allCustomers.find(c => c.id == customerId);
+            document.getElementById('ledgerCustomerName').textContent = customer.name + ' — Transaction History';
+            document.getElementById('ledgerContent').innerHTML =
+                '<div style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</div>';
+            openModal('ledgerModal');
+
+            try {
+                const res = await fetch('/api/v1/customer-ledger/' + customerId);
+                let sales = await res.json(); sales = sales?.data?.data || sales?.data || sales;
+
+                if (!sales.length) {
+                    document.getElementById('ledgerContent').innerHTML =
+                        `<div class="empty-state"><span class="empty-state-icon">🧾</span><h4>No transactions yet</h4></div>`;
+                    return;
+                }
+
+                const totalSpent = sales.reduce((s, x) => s + (x.final_amount || 0), 0);
+
+                document.getElementById('ledgerContent').innerHTML = `
+            <div class="grid grid-3 mb-16" style="margin-bottom:16px;">
+                <div style="padding:12px 14px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--r); text-align:center;">
+                    <div class="stat-label">Total Bills</div>
+                    <div style="font-family:'Bricolage Grotesque',sans-serif; font-size:24px; font-weight:800;">${sales.length}</div>
+                </div>
+                <div style="padding:12px 14px; background:var(--success-bg); border:1px solid var(--success-ring); border-radius:var(--r); text-align:center;">
+                    <div class="stat-label text-success">Total Spent</div>
+                    <div style="font-family:'Bricolage Grotesque',sans-serif; font-size:24px; font-weight:800; color:var(--success);">₹${totalSpent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+                </div>
+                <div style="padding:12px 14px; background:var(--danger-bg); border:1px solid var(--danger-ring); border-radius:var(--r); text-align:center;">
+                    <div class="stat-label text-danger">Outstanding</div>
+                    <div style="font-family:'Bricolage Grotesque',sans-serif; font-size:24px; font-weight:800; color:var(--danger);">₹${(customer.credit_balance || 0).toFixed(2)}</div>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th>Invoice</th><th>Date</th><th>Amount</th><th>Paid</th><th>Credit</th><th>Status</th></tr></thead>
+                    <tbody>
+                        ${sales.map(s => `<tr>
+                            <td class="text-accent" style="font-weight:700; font-family:'Bricolage Grotesque',sans-serif;">${s.invoice_number}</td>
+                            <td style="font-size:12px; color:var(--text-muted);">${new Date(s.created_at).toLocaleString('en-IN')}</td>
+                            <td class="td-amount">₹${parseFloat(s.final_amount).toFixed(2)}</td>
+                            <td class="text-success">₹${(parseFloat(s.cash_paid) + parseFloat(s.upi_paid)).toFixed(2)}</td>
+                            <td style="color:${s.credit_amount > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight:${s.credit_amount > 0 ? '700' : '400'};">₹${parseFloat(s.credit_amount).toFixed(2)}</td>
+                            <td><span class="badge ${s.credit_amount > 0 ? 'badge-warning' : 'badge-success'}">${s.credit_amount > 0 ? 'Udhaar' : 'Paid'}</span></td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+            } catch (e) {
+                document.getElementById('ledgerContent').innerHTML =
+                    `<div class="empty-state"><span class="empty-state-icon">📒</span><h4>Could not load ledger</h4></div>`;
+            }
+        }
+
+        function exportCSV() {
+            const header = ['ID', 'Name', 'Phone', 'Address', 'Credit Balance', 'Joined'];
+            const rows = allCustomers.map(c => [c.id, c.name, c.phone || '', c.address || '', c.credit_balance, c.created_at || '']);
+            const csv = [header, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+            const a = Object.assign(document.createElement('a'), {
+                href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })),
+                download: `customers_${new Date().toISOString().split('T')[0]}.csv`,
+            });
+            a.click();
+            showToast('Customers exported as CSV', 'success');
+        }
+
+        loadCustomers();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Sale Orders</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">K</div>
+                    <div class="brand-text">
+                        <h2>Kirana ERP</h2><span>Business Suite</span>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <div class="sidebar-section-label">Main Menu</div>
+                <a href="index.html"><span class="nav-icon">⊞</span> Dashboard</a>
+                <a href="billing.html"><span class="nav-icon">🧾</span> POS Billing</a>
+                <a href="products.html"><span class="nav-icon">📦</span> Products</a>
+                <a href="categories.html"><span class="nav-icon">🏷️</span> Categories</a>
+                <a href="customers.html"><span class="nav-icon">👥</span> Customers</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Purchase</div>
+                <a href="purchase-orders.html"><span class="nav-icon">📋</span> Purchase Orders</a>
+                <a href="purchases.html"><span class="nav-icon">🛒</span> Purchases</a>
+                <a href="purchase-returns.html"><span class="nav-icon">↩️</span> Purchase Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Sales</div>
+                <a href="sale-orders.html" class="active"><span class="nav-icon">📑</span> Sale Orders</a>
+                <a href="sales.html"><span class="nav-icon">📊</span> Sales History</a>
+                <a href="sale-returns.html"><span class="nav-icon">🔄</span> Sale Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Finance</div>
+                <a href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+                <a href="profit-loss.html"><span class="nav-icon">💹</span> Profit &amp; Loss</a>
+                <a href="register.html"><span class="nav-icon">🗃️</span> Register</a>
+                <a href="settings-invoice.html"><span class="nav-icon">⚙️</span> Invoice Settings</a>
+                <a href="backup.html"><span class="nav-icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="store-avatar">S</div>
+                    <div class="store-info">
+                        <h4>Store Admin</h4><span>Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="main">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h3>Sale Orders</h3>
+                    <div class="breadcrumb">Create quotations & convert to sales</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="status-pill"><span class="status-dot online"></span><span
+                            style="color:var(--success)">Online</span></div><button class="btn btn-primary"
+                        onclick="openAddModal()">+ New Sale Order</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="grid grid-4 mb-20">
+                    <div class="stat-card blue"><span class="stat-icon">📑</span>
+                        <div class="stat-label">Total Orders</div>
+                        <div class="stat-value" id="stat-total">0</div>
+                    </div>
+                    <div class="stat-card orange"><span class="stat-icon">⏳</span>
+                        <div class="stat-label">Pending</div>
+                        <div class="stat-value" id="stat-pending">0</div>
+                    </div>
+                    <div class="stat-card green"><span class="stat-icon">✅</span>
+                        <div class="stat-label">Converted</div>
+                        <div class="stat-value" id="stat-converted">0</div>
+                    </div>
+                    <div class="stat-card cyan"><span class="stat-icon">💰</span>
+                        <div class="stat-label">Total Value</div>
+                        <div class="stat-value" id="stat-value">₹0</div>
+                    </div>
+                </div>
+                <div class="glass-card" style="padding:20px 22px; margin-bottom:18px;">
+                    <div class="card-header mb-16">
+                        <div>
+                            <div class="card-title">Sale Orders</div>
+                            <div class="card-subtitle" id="tableCount">Loading...</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>SO #</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Value</th>
+                                    <th>Valid Till</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="soTable">
+                                <tr>
+                                    <td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);">
+                                        Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="soModal">
+        <div class="modal" style="max-width:680px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">New Sale Order</div>
+                </div><button class="modal-close" onclick="closeModal('soModal')">✕</button>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Customer</label><select id="so_customer">
+                        <option value="">Walk-in Customer</option>
+                    </select></div>
+                <div class="form-group"><label>Valid Till</label><input type="date" id="so_valid"></div>
+            </div>
+            <div id="soItemsContainer"></div>
+            <button class="btn btn-outline btn-sm" style="margin-bottom:12px;" onclick="addSoItem()">+ Add Item</button>
+            <div class="form-group"><label>Notes</label><input type="text" id="so_notes" placeholder="Optional"></div>
+            <div
+                style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:12px;font-size:13px;">
+                Order Total: <strong id="soTotal">₹0</strong>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('soModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveSO()">💾 Create Sale Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Convert Modal -->
+    <div class="modal-overlay" id="convertModal">
+        <div class="modal" style="max-width:480px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="convertTitle">Convert to Sale</div>
+                </div><button class="modal-close" onclick="closeModal('convertModal')">✕</button>
+            </div>
+            <input type="hidden" id="convert_so_id">
+            <div id="convertItemsList"
+                style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:12px;font-size:12.5px;max-height:200px;overflow-y:auto;">
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Cash (₹)</label><input type="number" id="convert_cash" placeholder="0">
+                </div>
+                <div class="form-group"><label>UPI (₹)</label><input type="number" id="convert_upi" placeholder="0">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('convertModal')">Cancel</button>
+                <button class="btn btn-success" onclick="convertSO()">✅ Convert to Sale</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script>
+        let allSOs = [], allProducts = [], allCustomers = [], soItemCount = 0;
+        function showToast(msg, type = 'info') { const el = document.createElement('div'); el.className = `toast ${type}`; el.innerHTML = `<span>${{ success: '✅', error: '❌', info: 'ℹ️' }[type]}</span><span class="toast-msg">${msg}</span>`; document.getElementById('toastContainer').appendChild(el); setTimeout(() => el.remove(), 3500); }
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        async function loadData() {
+            const [soRes, prodRes, custRes] = await Promise.all([fetch('/api/v1/sale-orders'), fetch('/api/v1/products?limit=200'), fetch('/api/v1/customers?limit=200')]);
+            const _soJson = await soRes.json(); allSOs = _soJson?.data?.data || _soJson?.data || _soJson; const prodJson = await prodRes.json(); const custJson = await custRes.json();
+            allProducts = prodJson?.data?.data || prodJson?.data || prodJson; allCustomers = custJson?.data?.data || custJson?.data || custJson;
+            document.getElementById('stat-total').textContent = allSOs.length;
+            document.getElementById('stat-pending').textContent = allSOs.filter(s => s.status === 'PENDING').length;
+            document.getElementById('stat-converted').textContent = allSOs.filter(s => s.status === 'CONVERTED').length;
+            const val = allSOs.reduce((s, o) => s + o.total_amount, 0);
+            document.getElementById('stat-value').textContent = '₹' + val.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            document.getElementById('tableCount').textContent = allSOs.length + ' sale orders';
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('soTable');
+            if (!allSOs.length) { tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><span class="empty-state-icon">📑</span><h4>No sale orders yet</h4></div></td></tr>`; return; }
+            const fmt = n => '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            tbody.innerHTML = allSOs.map(so => {
+                const badge = so.status === 'PENDING' ? 'badge-warning' : so.status === 'CONVERTED' ? 'badge-success' : 'badge-danger';
+                const actions = so.status === 'PENDING'
+                    ? `<button class="btn btn-success btn-sm" onclick="openConvert(${so.id},'${so.so_number}',${so.total_amount})">🔄 Convert</button>`
+                    : `<span class="text-muted" style="font-size:12px;">${so.status}</span>`;
+                return `<tr>
+            <td style="font-family:monospace;font-size:12px;">${so.so_number}</td>
+            <td class="td-primary">${so.customer_name || 'Walk-in'}</td>
+            <td><span class="badge badge-info">${so.item_count} items</span></td>
+            <td class="td-amount">${fmt(so.total_amount)}</td>
+            <td style="font-size:11.5px;color:var(--text-muted);">${so.valid_till || '—'}</td>
+            <td><span class="badge ${badge}">${so.status}</span></td>
+            <td style="font-size:11.5px;color:var(--text-muted);">${so.created_at_local ? so.created_at_local.split(' ')[0] : '—'}</td>
+            <td>${actions}</td>
+        </tr>`;
+            }).join('');
+        }
+
+        function openAddModal() {
+            soItemCount = 0; document.getElementById('soItemsContainer').innerHTML = '';
+            document.getElementById('so_notes').value = ''; document.getElementById('soTotal').textContent = '₹0';
+            document.getElementById('so_valid').value = '';
+            const sel = document.getElementById('so_customer');
+            sel.innerHTML = '<option value="">Walk-in Customer</option>' + allCustomers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            addSoItem(); openModal('soModal');
+        }
+
+        function addSoItem() {
+            const id = 'soItem_' + soItemCount++;
+            const opts = allProducts.map(p => `<option value="${p.id}" data-price="${p.selling_price}">${p.name}</option>`).join('');
+            const div = document.createElement('div'); div.id = id; div.style = 'display:grid;grid-template-columns:2fr 1fr 1fr 1fr 36px;gap:8px;margin-bottom:8px;align-items:end;';
+            div.innerHTML = `
+        <div class="form-group" style="margin:0;"><label style="font-size:11px;">Product</label><select class="so-prod" onchange="fillSoPrice(this)">${opts}</select></div>
+        <div class="form-group" style="margin:0;"><label style="font-size:11px;">Qty</label><input type="number" class="so-qty" value="1" min="1" oninput="calcSoTotal()"></div>
+        <div class="form-group" style="margin:0;"><label style="font-size:11px;">Price</label><input type="number" class="so-price" placeholder="0" oninput="calcSoTotal()"></div>
+        <div class="form-group" style="margin:0;"><label style="font-size:11px;">Discount%</label><input type="number" class="so-disc" value="0" min="0" max="100" oninput="calcSoTotal()"></div>
+        <button class="btn btn-danger btn-sm" style="height:36px;" onclick="document.getElementById('${id}').remove();calcSoTotal();">✕</button>`;
+            document.getElementById('soItemsContainer').appendChild(div);
+            const sel = div.querySelector('.so-prod'); const opt = sel.options[sel.selectedIndex];
+            if (opt) div.querySelector('.so-price').value = opt.dataset.price || 0;
+            calcSoTotal();
+        }
+
+        function fillSoPrice(sel) {
+            const opt = sel.options[sel.selectedIndex];
+            sel.closest('div').parentElement.querySelector('.so-price').value = opt.dataset.price || 0;
+            calcSoTotal();
+        }
+
+        function calcSoTotal() {
+            let total = 0;
+            document.querySelectorAll('#soItemsContainer > div').forEach(row => {
+                const qty = parseFloat(row.querySelector('.so-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.so-price').value) || 0;
+                const disc = parseFloat(row.querySelector('.so-disc').value) || 0;
+                total += qty * price * (1 - disc / 100);
+            });
+            document.getElementById('soTotal').textContent = '₹' + total.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        }
+
+        async function saveSO() {
+            const items = [];
+            document.querySelectorAll('#soItemsContainer > div').forEach(row => {
+                const product_id = parseInt(row.querySelector('.so-prod').value);
+                const quantity = parseInt(row.querySelector('.so-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.so-price').value) || 0;
+                const discount = parseFloat(row.querySelector('.so-disc').value) || 0;
+                if (product_id && quantity > 0) items.push({ product_id, quantity, price, discount });
+            });
+            if (!items.length) return showToast('Add at least one item', 'error');
+            const payload = {
+                customer_id: parseInt(document.getElementById('so_customer').value) || null,
+                items, notes: document.getElementById('so_notes').value.trim() || null,
+                valid_till: document.getElementById('so_valid').value || null
+            };
+            const res = await fetch('/api/v1/add-sale-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const json = await res.json();
+            if (!res.ok) return showToast(json.message || json.error || 'Failed', 'error');
+            const data = json?.data || json;
+            showToast('Sale order created: ' + data.so_number, 'success');
+            closeModal('soModal'); loadData();
+        }
+
+        async function openConvert(soId, soNum, total) {
+            document.getElementById('convert_so_id').value = soId;
+            document.getElementById('convertTitle').textContent = 'Convert — ' + soNum;
+            document.getElementById('convert_cash').value = '';
+            document.getElementById('convert_upi').value = '';
+            const itemsRes = await fetch('/api/v1/sale-order-items/' + soId);
+            let items = await itemsRes.json(); items = items?.data?.data || items?.data || items;
+            document.getElementById('convertItemsList').innerHTML = '<strong>Items:</strong><br><br>' + items.map(i => `• ${i.product_name} — ${i.quantity} × ₹${i.price} (${i.discount}% off)`).join('<br>') + `<br><br><strong>Total: ₹${parseFloat(total).toFixed(2)}</strong>`;
+            openModal('convertModal');
+        }
+
+        async function convertSO() {
+            const soId = document.getElementById('convert_so_id').value;
+            const payload = { cash_paid: parseFloat(document.getElementById('convert_cash').value) || 0, upi_paid: parseFloat(document.getElementById('convert_upi').value) || 0 };
+            const res = await fetch('/api/v1/convert-sale-order/' + soId, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const json2 = await res.json();
+            if (!res.ok) return showToast(json2.message || json2.error || 'Failed', 'error');
+            const data2 = json2?.data || json2;
+            showToast('Converted! Invoice: ' + data2.invoice, 'success');
+            closeModal('convertModal'); loadData();
+        }
+        loadData();
+    </script>
+</body>
+
+</html>

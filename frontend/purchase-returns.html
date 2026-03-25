@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Purchase Returns</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">K</div>
+                    <div class="brand-text">
+                        <h2>Kirana ERP</h2><span>Business Suite</span>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <div class="sidebar-section-label">Main Menu</div>
+                <a href="index.html"><span class="nav-icon">⊞</span> Dashboard</a>
+                <a href="billing.html"><span class="nav-icon">🧾</span> POS Billing</a>
+                <a href="products.html"><span class="nav-icon">📦</span> Products</a>
+                <a href="categories.html"><span class="nav-icon">🏷️</span> Categories</a>
+                <a href="customers.html"><span class="nav-icon">👥</span> Customers</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Purchase</div>
+                <a href="purchase-orders.html"><span class="nav-icon">📋</span> Purchase Orders</a>
+                <a href="purchases.html"><span class="nav-icon">🛒</span> Purchases</a>
+                <a href="purchase-returns.html" class="active"><span class="nav-icon">↩️</span> Purchase Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Sales</div>
+                <a href="sale-orders.html"><span class="nav-icon">📑</span> Sale Orders</a>
+                <a href="sales.html"><span class="nav-icon">📊</span> Sales History</a>
+                <a href="sale-returns.html"><span class="nav-icon">🔄</span> Sale Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Finance</div>
+                <a href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+                <a href="profit-loss.html"><span class="nav-icon">💹</span> Profit &amp; Loss</a>
+                <a href="register.html"><span class="nav-icon">🗃️</span> Register</a>
+                <a href="settings-invoice.html"><span class="nav-icon">⚙️</span> Invoice Settings</a>
+                <a href="backup.html"><span class="nav-icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="store-avatar">S</div>
+                    <div class="store-info">
+                        <h4>Store Admin</h4><span>Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="main">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h3>Purchase Returns</h3>
+                    <div class="breadcrumb">Return goods back to supplier</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="status-pill"><span class="status-dot online"></span><span
+                            style="color:var(--success)">Online</span></div><button class="btn btn-primary"
+                        onclick="openAddModal()">+ New Return</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="grid grid-4 mb-20">
+                    <div class="stat-card blue"><span class="stat-icon">↩️</span>
+                        <div class="stat-label">Total Returns</div>
+                        <div class="stat-value" id="stat-total">0</div>
+                    </div>
+                    <div class="stat-card orange"><span class="stat-icon">💰</span>
+                        <div class="stat-label">Total Value</div>
+                        <div class="stat-value" id="stat-value">₹0</div>
+                    </div>
+                    <div class="stat-card green"><span class="stat-icon">📦</span>
+                        <div class="stat-label">This Month</div>
+                        <div class="stat-value" id="stat-month">0</div>
+                    </div>
+                    <div class="stat-card cyan"><span class="stat-icon">✅</span>
+                        <div class="stat-label">Completed</div>
+                        <div class="stat-value" id="stat-completed">0</div>
+                    </div>
+                </div>
+                <div class="glass-card" style="padding:20px 22px; margin-bottom:18px;">
+                    <div class="card-header mb-16">
+                        <div>
+                            <div class="card-title">Purchase Returns</div>
+                            <div class="card-subtitle" id="tableCount">Loading...</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Return #</th>
+                                    <th>Purchase #</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Reason</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prTable">
+                                <tr>
+                                    <td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted);">
+                                        Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="prModal">
+        <div class="modal" style="max-width:680px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">New Purchase Return</div>
+                </div><button class="modal-close" onclick="closeModal('prModal')">✕</button>
+            </div>
+            <div class="form-group">
+                <label>Link to Purchase (optional)</label>
+                <select id="pr_purchase_id">
+                    <option value="">— Select Purchase —</option>
+                </select>
+            </div>
+            <div id="prItemsContainer"></div>
+            <button class="btn btn-outline btn-sm" style="margin-bottom:12px;" onclick="addPrItem()">+ Add Item</button>
+            <div class="form-group"><label>Reason</label><input type="text" id="pr_reason"
+                    placeholder="e.g. Damaged goods, Wrong item"></div>
+            <div
+                style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:12px;font-size:13px;">
+                Return Total: <strong id="prTotal">₹0</strong>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('prModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="savePR()">💾 Record Return</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script>
+        let allReturns = [], allProducts = [], allPurchases = [], prItemCount = 0;
+        function showToast(msg, type = 'info') { const el = document.createElement('div'); el.className = `toast ${type}`; el.innerHTML = `<span>${{ success: '✅', error: '❌', info: 'ℹ️' }[type]}</span><span class="toast-msg">${msg}</span>`; document.getElementById('toastContainer').appendChild(el); setTimeout(() => el.remove(), 3500); }
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        async function loadData() {
+            const [retRes, prodRes, purRes] = await Promise.all([fetch('/api/v1/purchase-returns?limit=200'), fetch('/api/v1/products?limit=200'), fetch('/api/v1/purchases?limit=200')]);
+            const retJson = await retRes.json(); const prodJson = await prodRes.json(); const purJson = await purRes.json();
+            allReturns = retJson?.data?.data || retJson?.data || retJson; allProducts = prodJson?.data?.data || prodJson?.data || prodJson; allPurchases = purJson?.data?.data || purJson?.data || purJson;
+            document.getElementById('stat-total').textContent = allReturns.length;
+            const val = allReturns.reduce((s, r) => s + r.total_amount, 0);
+            document.getElementById('stat-value').textContent = '₹' + val.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            const month = allReturns.filter(r => r.created_at_local && r.created_at_local.startsWith(new Date().toISOString().slice(0, 7))).length;
+            document.getElementById('stat-month').textContent = month;
+            document.getElementById('stat-completed').textContent = allReturns.filter(r => r.status === 'COMPLETED').length;
+            document.getElementById('tableCount').textContent = allReturns.length + ' returns';
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('prTable');
+            if (!allReturns.length) { tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><span class="empty-state-icon">↩️</span><h4>No purchase returns yet</h4></div></td></tr>`; return; }
+            const fmt = n => '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            tbody.innerHTML = allReturns.map(r => `<tr>
+        <td style="font-family:monospace;font-size:12px;">${r.return_number}</td>
+        <td style="font-family:monospace;font-size:12px;color:var(--text-muted);">${r.purchase_id ? 'PUR-' + String(r.purchase_id).padStart(5, '0') : '—'}</td>
+        <td><span class="badge badge-info">${r.item_count} items</span></td>
+        <td class="td-amount">${fmt(r.total_amount)}</td>
+        <td style="font-size:12px;color:var(--text-muted);">${r.reason || '—'}</td>
+        <td style="font-size:11.5px;color:var(--text-muted);">${r.created_at_local ? r.created_at_local.split(' ')[0] : '—'}</td>
+        <td><span class="badge badge-success">${r.status}</span></td>
+    </tr>`).join('');
+        }
+
+        function openAddModal() {
+            prItemCount = 0; document.getElementById('prItemsContainer').innerHTML = '';
+            document.getElementById('pr_reason').value = '';
+            document.getElementById('prTotal').textContent = '₹0';
+            const sel = document.getElementById('pr_purchase_id');
+            sel.innerHTML = '<option value="">— Select Purchase —</option>' + allPurchases.map(p => `<option value="${p.id}">${p.purchase_number} — ${p.supplier_name}</option>`).join('');
+            addPrItem(); openModal('prModal');
+        }
+
+        function addPrItem() {
+            const id = 'prItem_' + prItemCount++;
+            const opts = allProducts.map(p => `<option value="${p.id}" data-price="${p.cost_price}">${p.name}</option>`).join('');
+            const div = document.createElement('div'); div.id = id; div.style = 'display:grid;grid-template-columns:2fr 1fr 1fr 36px;gap:8px;margin-bottom:8px;align-items:end;';
+            div.innerHTML = `
+        <div class="form-group" style="margin:0;"><label style="font-size:11px;">Product</label><select class="pr-prod">${opts}</select></div>
+        <div class="form-group" style="margin:0;"><label style="font-size:11px;">Qty</label><input type="number" class="pr-qty" value="1" min="1" oninput="calcPrTotal()"></div>
+        <div class="form-group" style="margin:0;"><label style="font-size:11px;">Purchase Price</label><input type="number" class="pr-price" placeholder="0" oninput="calcPrTotal()"></div>
+        <button class="btn btn-danger btn-sm" style="height:36px;" onclick="document.getElementById('${id}').remove();calcPrTotal();">✕</button>`;
+            document.getElementById('prItemsContainer').appendChild(div);
+            const sel = div.querySelector('.pr-prod'); const opt = sel.options[sel.selectedIndex];
+            if (opt) div.querySelector('.pr-price').value = opt.dataset.price || 0;
+            calcPrTotal();
+        }
+
+        function calcPrTotal() {
+            let total = 0;
+            document.querySelectorAll('#prItemsContainer > div').forEach(row => {
+                total += (parseFloat(row.querySelector('.pr-qty').value) || 0) * (parseFloat(row.querySelector('.pr-price').value) || 0);
+            });
+            document.getElementById('prTotal').textContent = '₹' + total.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        }
+
+        async function savePR() {
+            const items = [];
+            document.querySelectorAll('#prItemsContainer > div').forEach(row => {
+                const product_id = parseInt(row.querySelector('.pr-prod').value);
+                const quantity = parseInt(row.querySelector('.pr-qty').value) || 0;
+                const purchase_price = parseFloat(row.querySelector('.pr-price').value) || 0;
+                if (product_id && quantity > 0) items.push({ product_id, quantity, purchase_price });
+            });
+            if (!items.length) return showToast('Add at least one item', 'error');
+            const purchase_id = parseInt(document.getElementById('pr_purchase_id').value) || null;
+            const reason = document.getElementById('pr_reason').value.trim() || null;
+            const res = await fetch('/api/v1/purchase-return', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ purchase_id, items, reason }) });
+            const json = await res.json();
+            if (!res.ok) return showToast(json.message || json.error || 'Failed', 'error');
+            const data = json?.data || json;
+            showToast('Return recorded: ' + data.return_number, 'success');
+            closeModal('prModal'); loadData();
+        }
+        loadData();
+    </script>
+</body>
+
+</html>

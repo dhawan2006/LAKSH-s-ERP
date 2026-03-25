@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Sales History</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/auth.js"></script>
+    <script src="js/dialog.js"></script>
+    <script src="js/receipt-engine.js?v=3"></script>
+</head>
+
+<body>
+    <div class="app">
+
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">K</div>
+                    <div class="brand-text">
+                        <h2>Kirana ERP</h2><span>Business Suite</span>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <div class="sidebar-section-label">Main Menu</div>
+                <a href="index.html"><span class="nav-icon">⊞</span> Dashboard</a>
+                <a href="billing.html"><span class="nav-icon">🧾</span> POS Billing</a>
+                <a href="products.html"><span class="nav-icon">📦</span> Products</a>
+                <a href="categories.html"><span class="nav-icon">🏷️</span> Categories</a>
+                <a href="customers.html"><span class="nav-icon">👥</span> Customers</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Purchase</div>
+                <a href="purchase-orders.html"><span class="nav-icon">📋</span> Purchase Orders</a>
+                <a href="purchases.html"><span class="nav-icon">🛒</span> Purchases</a>
+                <a href="purchase-returns.html"><span class="nav-icon">↩️</span> Purchase Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Sales</div>
+                <a href="sale-orders.html"><span class="nav-icon">📑</span> Sale Orders</a>
+                <a href="sales.html" class="active"><span class="nav-icon">📊</span> Sales History</a>
+                <a href="sale-returns.html"><span class="nav-icon">🔄</span> Sale Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Finance</div>
+                <a href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+                <a href="profit-loss.html"><span class="nav-icon">💹</span> Profit &amp; Loss</a>
+                <a href="register.html"><span class="nav-icon">🗃️</span> Register</a>
+                <a href="settings-invoice.html"><span class="nav-icon">⚙️</span> Invoice Settings</a>
+                <a href="backup.html"><span class="nav-icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="store-avatar">S</div>
+                    <div class="store-info">
+                        <h4>Store Admin</h4><span>Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="main">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h3>Sales History</h3>
+                    <div class="breadcrumb">All transactions & invoices</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="status-pill"><span class="status-dot online"></span><span
+                            style="color:var(--success)">Online</span></div>
+                    <button class="btn btn-outline btn-sm" onclick="exportCSV()">⬇️ Export</button>
+                    <a href="billing.html" class="btn btn-primary btn-sm">+ New Sale</a>
+                </div>
+            </div>
+
+            <div class="content">
+
+                <div class="grid grid-4 mb-20">
+                    <div class="stat-card blue">
+                        <span class="stat-icon">💰</span>
+                        <div class="stat-label">Total Revenue</div>
+                        <div class="stat-value" id="stat-total-sales">₹0</div>
+                    </div>
+                    <div class="stat-card green">
+                        <span class="stat-icon">🧾</span>
+                        <div class="stat-label">Total Bills</div>
+                        <div class="stat-value" id="stat-bill-count">0</div>
+                    </div>
+                    <div class="stat-card cyan">
+                        <span class="stat-icon">📱</span>
+                        <div class="stat-label">Total UPI</div>
+                        <div class="stat-value" id="stat-upi">₹0</div>
+                    </div>
+                    <div class="stat-card red">
+                        <span class="stat-icon">⚠️</span>
+                        <div class="stat-label">Total Credit Given</div>
+                        <div class="stat-value" id="stat-credit">₹0</div>
+                    </div>
+                </div>
+
+                <!-- TASK 5: Filter bar with Voided option -->
+                <div class="glass-card" style="padding:20px 22px; margin-bottom:16px;">
+                    <div class="filters-bar">
+                        <div class="search-bar" style="flex:1; min-width:180px;">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchSale" placeholder="Search invoice or customer..."
+                                oninput="currentPage=1;filterAndRender()">
+                        </div>
+                        <input type="date" id="dateFrom" onchange="currentPage=1;filterAndRender()" style="width:148px;"
+                            title="From date">
+                        <input type="date" id="dateTo" onchange="currentPage=1;filterAndRender()" style="width:148px;" title="To date">
+                        <select id="statusFilter" class="filter-select" onchange="currentPage=1;filterAndRender()">
+                            <option value="">All Status</option>
+                            <option value="COMPLETED">Paid</option>
+                            <option value="CREDIT">Has Udhaar</option>
+                            <option value="VOIDED">Voided</option>
+                        </select>
+                        <button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕ Clear</button>
+                    </div>
+                </div>
+
+                <!-- TASK 7: Active filter summary bar (hidden by default) -->
+                <div id="filterSummaryBar" style="display:none;
+                     background:var(--bg-elevated); border:1px solid var(--border);
+                     border-radius:var(--r-sm); padding:10px 16px; margin-bottom:12px;
+                     align-items:center; justify-content:space-between; font-size:13px;">
+                    <span id="filterSummaryText" style="color:var(--text-secondary);"></span>
+                    <button class="btn btn-ghost btn-sm" onclick="clearFilters()"
+                            style="font-size:11px; padding:3px 8px;">Clear filter</button>
+                </div>
+
+                <div class="glass-card" style="padding:20px 22px; margin-bottom:18px;">
+                    <div class="card-header mb-16">
+                        <div>
+                            <div class="card-title">Transaction List</div>
+                            <div class="card-subtitle" id="tableCount">Loading...</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Invoice</th>
+                                    <th>Date & Time</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Amount</th>
+                                    <th>Cash</th>
+                                    <th>UPI</th>
+                                    <th>Credit</th>
+                                    <th>Discount</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesTable">
+                                <tr>
+                                    <td colspan="11" style="text-align:center;padding:30px;color:var(--text-muted);">
+                                        Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- TASK 3: Pagination bar -->
+                    <div class="pagination">
+                        <div class="pagination-info" id="paginationInfo">—</div>
+                        <div class="pagination-controls" id="paginationControls"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- SALE DETAIL MODAL -->
+    <div class="modal-overlay" id="saleModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">Sale Details</div>
+                    <div class="modal-subtitle" id="saleModalSubtitle">Invoice details</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('saleModal')">✕</button>
+            </div>
+            <div id="saleModalContent"></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('saleModal')">Close</button>
+                <div style="flex:1"></div>
+                <!-- Issue #8: Resend Receipt -->
+                <button class="btn btn-ghost btn-sm" id="modalCopyBtn" style="display:none;" onclick="copySaleReceipt()" title="Copy Receipt Text">📋 Copy</button>
+                <button class="btn btn-success btn-sm" id="modalWaBtn" style="display:none;background:#25D366;color:#fff;border:none;" onclick="sendSaleWhatsApp()" title="Send via WhatsApp">📱 WhatsApp</button>
+                
+                <button class="btn btn-danger btn-sm" id="modalVoidBtn" style="display:none;" onclick="">🗑 Void Invoice</button>
+                <button class="btn btn-primary" id="printSaleBtn">🖨️ Print</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MANAGER PIN MODAL (for Void authorisation) -->
+    <div class="modal-overlay" id="voidPinModal">
+        <div class="modal" style="max-width:340px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">Manager Authorisation</div>
+                    <div class="modal-subtitle" id="voidPinModalSubtitle">Enter 4-digit PIN to void this invoice</div>
+                </div>
+                <button class="modal-close" onclick="cancelVoidPin()">✕</button>
+            </div>
+            <div style="padding:16px 0 8px;">
+                <label>MANAGER PIN</label>
+                <input type="password" id="voidPinInput" maxlength="4"
+                    placeholder="••••"
+                    style="letter-spacing:6px;font-size:20px;text-align:center;"
+                    onkeydown="if(event.key==='Enter') submitVoidPin()">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="cancelVoidPin()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitVoidPin()">Authorise</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+
+
+    <script>
+        // ── State ────────────────────────────────────────────────────────
+        let allSales = [];
+        let lastFilteredSales = [];
+        let currentPage = 1;
+        const PAGE_SIZE = 25;
+        let currentSettings = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.ReceiptEngine) {
+                ReceiptEngine.clearSettingsCache();
+                currentSettings = await ReceiptEngine.getInvoiceSettings();
+            }
+        });
+
+        // ── Utilities ────────────────────────────────────────────────────
+        function showToast(msg, type = 'info') {
+            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.innerHTML = `<span>${icons[type]}</span><span class="toast-msg">${msg}</span><button class="toast-close" onclick="this.parentElement.remove()">✕</button>`;
+            document.getElementById('toastContainer').appendChild(el);
+            setTimeout(() => el.remove(), 3500);
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        // ── TASK 1: Load Sales (full dataset once) ───────────────────────
+        async function loadSales() {
+            try {
+                const res = await fetch('/api/v1/sales?limit=500&offset=0');
+                const json = await res.json();
+                allSales = json?.data?.data || json?.data || [];
+                filterAndRender();
+                if (json?.data?.hasMore) {
+                    showToast('Loaded 500 records. Older records may not appear in search.', 'info');
+                }
+            } catch (e) {
+                showToast('Failed to load sales', 'error');
+            }
+        }
+
+        // ── TASK 2: Update Stats (accepts list param) ────────────────────
+        function updateStats(list) {
+            const fmtK = n => '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            const active = list.filter(s => s.status !== 'VOIDED');
+            document.getElementById('stat-total-sales').textContent = fmtK(active.reduce((s, x) => s + (x.final_amount || 0), 0));
+            document.getElementById('stat-bill-count').textContent = active.length;
+            document.getElementById('stat-upi').textContent = fmtK(active.reduce((s, x) => s + (x.upi_paid || 0), 0));
+            document.getElementById('stat-credit').textContent = fmtK(active.reduce((s, x) => s + (x.credit_amount || 0), 0));
+        }
+
+        // ── TASK 1: Filter + Paginate ────────────────────────────────────
+        function filterAndRender() {
+            const kw = document.getElementById('searchSale').value.toLowerCase().trim();
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            const statusF = document.getElementById('statusFilter').value;
+
+            let filtered = [...allSales];
+
+            if (kw) filtered = filtered.filter(s =>
+                s.invoice_number.toLowerCase().includes(kw) ||
+                (s.customer_name && s.customer_name.toLowerCase().includes(kw))
+            );
+            if (dateFrom) filtered = filtered.filter(s =>
+                (s.created_at_local || s.created_at || '').slice(0, 10) >= dateFrom
+            );
+            if (dateTo) filtered = filtered.filter(s =>
+                (s.created_at_local || s.created_at || '').slice(0, 10) <= dateTo
+            );
+
+            if (statusF === 'CREDIT') filtered = filtered.filter(s => parseFloat(s.credit_amount) > 0 && s.status !== 'VOIDED');
+            else if (statusF === 'COMPLETED') filtered = filtered.filter(s => parseFloat(s.credit_amount) <= 0 && s.status !== 'VOIDED');
+            else if (statusF === 'VOIDED') filtered = filtered.filter(s => s.status === 'VOIDED');
+
+            // TASK 9: Store filtered list for CSV export
+            lastFilteredSales = filtered;
+
+            // Update stats to reflect the filtered set
+            updateStats(filtered);
+
+            // Pagination
+            const totalFiltered = filtered.length;
+            const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const pageSlice = filtered.slice(start, start + PAGE_SIZE);
+
+            renderTable(pageSlice, totalFiltered, totalPages);
+            renderPagination(totalFiltered, totalPages);
+            updateSummaryBar(filtered, dateFrom, dateTo);
+        }
+
+        function clearFilters() {
+            ['searchSale', 'dateFrom', 'dateTo', 'statusFilter'].forEach(id => document.getElementById(id).value = '');
+            currentPage = 1;
+            filterAndRender();
+        }
+
+        // ── TASK 3: Render Pagination ────────────────────────────────────
+        function renderPagination(totalFiltered, totalPages) {
+            const start = (currentPage - 1) * PAGE_SIZE + 1;
+            const end = Math.min(currentPage * PAGE_SIZE, totalFiltered);
+            document.getElementById('paginationInfo').textContent =
+                totalFiltered === 0 ? 'No records' : `Showing ${start}–${end} of ${totalFiltered}`;
+            document.getElementById('tableCount').textContent = `${totalFiltered} transactions found`;
+
+            const ctrl = document.getElementById('paginationControls');
+            if (totalPages <= 1) { ctrl.innerHTML = ''; return; }
+
+            let btns = '';
+            // Prev button
+            btns += `<button class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="currentPage=${currentPage - 1};filterAndRender()">‹</button>`;
+
+            // Page buttons
+            if (totalPages <= 5) {
+                for (let i = 1; i <= totalPages; i++) {
+                    btns += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="currentPage=${i};filterAndRender()">${i}</button>`;
+                }
+            } else {
+                // Always show page 1
+                btns += `<button class="pagination-btn ${1 === currentPage ? 'active' : ''}" onclick="currentPage=1;filterAndRender()">1</button>`;
+
+                // Ellipsis before currentPage neighborhood
+                if (currentPage > 3) {
+                    btns += '<span style="padding:0 4px;color:var(--text-muted);font-size:12px;">…</span>';
+                }
+
+                // Pages around current
+                const rangeStart = Math.max(2, currentPage - 1);
+                const rangeEnd = Math.min(totalPages - 1, currentPage + 1);
+                for (let i = rangeStart; i <= rangeEnd; i++) {
+                    btns += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="currentPage=${i};filterAndRender()">${i}</button>`;
+                }
+
+                // Ellipsis after currentPage neighborhood
+                if (currentPage < totalPages - 2) {
+                    btns += '<span style="padding:0 4px;color:var(--text-muted);font-size:12px;">…</span>';
+                }
+
+                // Always show last page
+                btns += `<button class="pagination-btn ${totalPages === currentPage ? 'active' : ''}" onclick="currentPage=${totalPages};filterAndRender()">${totalPages}</button>`;
+            }
+
+            // Next button
+            btns += `<button class="pagination-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="currentPage=${currentPage + 1};filterAndRender()">›</button>`;
+
+            ctrl.innerHTML = btns;
+        }
+
+        // ── TASK 7: Filter Summary Bar ───────────────────────────────────
+        function updateSummaryBar(filtered, dateFrom, dateTo) {
+            const bar = document.getElementById('filterSummaryBar');
+            const textEl = document.getElementById('filterSummaryText');
+            if (!dateFrom && !dateTo) { bar.style.display = 'none'; return; }
+
+            bar.style.display = 'flex';
+            const active = filtered.filter(s => s.status !== 'VOIDED');
+            const revenue = active.reduce((s, x) => s + (x.final_amount || 0), 0);
+            const avgBill = active.length ? revenue / active.length : 0;
+            const cashTotal = active.reduce((s, x) => s + (x.cash_paid || 0), 0);
+            const upiTotal = active.reduce((s, x) => s + (x.upi_paid || 0), 0);
+            const topMode = upiTotal > cashTotal ? 'UPI' : 'Cash';
+
+            const fmtS = n => '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            let range = '';
+            if (dateFrom && dateTo) range = `${dateFrom} to ${dateTo}`;
+            else if (dateFrom) range = `from ${dateFrom}`;
+            else if (dateTo) range = `up to ${dateTo}`;
+
+            textEl.textContent = `${range} · ${active.length} bills · ${fmtS(revenue)} revenue · avg ${fmtS(avgBill)}/bill · top mode: ${topMode}`;
+        }
+
+        // ── Table Render (TASKS 4, 6, 8) ─────────────────────────────────
+        function renderTable(sales, totalFiltered, totalPages) {
+            const tbody = document.getElementById('salesTable');
+
+            if (!sales.length) {
+                tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state">
+            <span class="empty-state-icon">🧾</span><h4>No sales found</h4></div></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = sales.map(s => {
+                const isVoided  = s.status === 'VOIDED';
+                const isReturned = s.status === 'RETURNED';
+                const hasCredit = parseFloat(s.credit_amount) > 0 && !isVoided;
+                const dt = new Date(s.created_at_local || s.created_at);
+                const dateStr = dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                const timeStr = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+                const disc = s.bill_discount > 0
+                    ? `${s.bill_discount}${s.discount_type === 'percent' ? '%' : '₹'}`
+                    : '—';
+
+                // TASK 4: Voided uses badge-muted
+                const statusBadge = isVoided
+                    ? `<span class="badge badge-muted">Voided</span>`
+                    : isReturned
+                        ? `<span class="badge badge-warning">Returned</span>`
+                        : hasCredit
+                        ? `<span class="badge badge-warning">Partial</span>`
+                        : `<span class="badge badge-success">Paid</span>`;
+
+                // TASK 8: Credit cell with Collect button for named customers
+                let creditCell;
+                if (hasCredit && s.customer_id && s.customer_id > 0) {
+                    const safeCustomer = (s.customer_name || '').replace(/'/g, "\\'");
+                    creditCell = `<td style="font-size:12px;">
+                        <div style="color:var(--danger); font-weight:600;">⚠️ ₹${parseFloat(s.credit_amount).toFixed(2)}</div>
+                        <button class="btn btn-ghost btn-sm"
+                                style="font-size:10.5px; padding:2px 6px; margin-top:3px; color:var(--warning);"
+                                onclick="event.stopPropagation(); collectUdhaar(${s.id}, ${s.customer_id}, ${parseFloat(s.credit_amount).toFixed(2)}, '${safeCustomer}')">
+                            Collect ₹
+                        </button>
+                    </td>`;
+                } else if (hasCredit) {
+                    creditCell = `<td style="color:var(--danger); font-weight:600;">
+                        ⚠️ ₹${parseFloat(s.credit_amount).toFixed(2)}
+                    </td>`;
+                } else {
+                    creditCell = `<td style="color:var(--text-muted); font-weight:400;">
+                        ₹${parseFloat(s.credit_amount).toFixed(2)}
+                    </td>`;
+                }
+
+                // TASK 6: Returns badge
+                const returnBadge = (s.return_count && s.return_count > 0)
+                    ? `<a href="sale-returns.html?invoice=${encodeURIComponent(s.invoice_number)}"
+                         class="btn btn-ghost btn-sm"
+                         title="View ${s.return_count} return(s) for this invoice"
+                         style="color:var(--warning);">
+                         ↩ ${s.return_count}
+                       </a>`
+                    : '';
+
+                return `<tr style="${isVoided ? 'opacity:0.45;' : ''}">
+            <td style="font-weight:700; font-family:'Bricolage Grotesque',sans-serif; font-size:13px; ${isVoided ? 'text-decoration:line-through; color:var(--text-muted);' : 'color:var(--text-accent);'}">
+                ${s.invoice_number}
+            </td>
+            <td>
+                <div style="font-size:13px; color:var(--text-primary);">${dateStr}</div>
+                <div style="font-size:11px; color:var(--text-muted);">${timeStr}</div>
+            </td>
+            <td class="${s.customer_name ? 'td-primary' : 'text-muted'}">${s.customer_name || 'Walk-in'}</td>
+            <td class="text-muted" style="font-size:12px;">${s.item_count || '—'}</td>
+            <td class="td-amount">₹${parseFloat(s.final_amount).toFixed(2)}</td>
+            <td class="text-success">₹${parseFloat(s.cash_paid).toFixed(2)}</td>
+            <td class="text-info">₹${parseFloat(s.upi_paid).toFixed(2)}</td>
+            ${creditCell}
+            <td class="text-warning" style="font-size:12px;">${disc}</td>
+            <td>${statusBadge}</td>
+            <td style="display:flex;gap:4px;flex-wrap:wrap;">
+                <button class="btn btn-ghost btn-sm" onclick="viewSale(${s.id})" title="View details">🔍 View</button>
+                <button class="btn btn-outline btn-sm" onclick="reprintSale(${s.id})" title="Reprint invoice">🖨️</button>
+                ${!isVoided && !isReturned
+                    ? `<button class="btn btn-danger btn-sm" onclick="initVoidSale(${s.id}, '${s.invoice_number}')" title="Void this invoice">🗑 Void</button>`
+                    : `<span style="font-size:11px;color:var(--text-muted);padding:4px 6px;">${isVoided ? '— voided' : '— returned'}</span>`
+                }
+                ${returnBadge}
+            </td>
+        </tr>`;
+            }).join('');
+        }
+
+        // ── View Sale Modal (unchanged logic) ────────────────────────────
+        async function viewSale(id) {
+            const saleMeta = allSales.find(s => s.id == id);
+            document.getElementById('saleModalSubtitle').textContent = saleMeta?.invoice_number || '...';
+            document.getElementById('saleModalContent').innerHTML =
+                '<div style="text-align:center;padding:30px;color:var(--text-muted);">Loading details...</div>';
+            openModal('saleModal');
+
+            try {
+                const res = await fetch('/api/v1/sale/' + id);
+                if (!res.ok) throw new Error('Not found');
+                const json = await res.json();
+                const sale = json?.data || json;
+                const items = sale.items || [];
+
+                const date = new Date(sale.created_at_local || sale.created_at).toLocaleString('en-IN');
+                const disc = sale.bill_discount > 0
+                    ? `${sale.bill_discount}${sale.discount_type === 'percent' ? '%' : ' ₹'}`
+                    : 'None';
+
+                document.getElementById('saleModalContent').innerHTML = `
+            <div class="grid grid-2 mb-16" style="margin-bottom:16px;">
+                ${[
+                        ['Invoice', `<span class="text-accent" style="font-weight:700;">${sale.invoice_number}</span>`],
+                        ['Date &amp; Time', date],
+                        ['Customer', sale.customer_name || 'Walk-in Customer'],
+                        ['Bill Discount', disc],
+                    ].map(([k, v]) => `<div style="padding:10px 12px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--r-sm);">
+                    <div style="font-size:10.5px; text-transform:uppercase; letter-spacing:1.2px; color:var(--text-muted); margin-bottom:4px;">${k}</div>
+                    <div style="font-size:13px; font-weight:600; color:var(--text-primary);">${v}</div>
+                </div>`).join('')}
+            </div>
+
+            <div class="table-wrapper" style="margin-bottom:16px;">
+                <table>
+                    <thead><tr><th>Product</th><th>Qty</th><th>Rate</th><th>Disc%</th><th>GST%</th><th>Total</th></tr></thead>
+                    <tbody>
+                        ${items.length ? items.map(item => {
+                        const net = item.quantity * item.price * (1 - (item.discount || 0) / 100);
+                        const gstAmt = net * ((item.gst || 0) / 100);
+                        return `<tr>
+                                <td class="td-primary">${item.name || '—'}</td>
+                                <td>${item.quantity}</td>
+                                <td>₹${parseFloat(item.price).toFixed(2)}</td>
+                                <td>${item.discount || 0}%</td>
+                                <td>${item.gst || 0}%</td>
+                                <td class="td-amount">₹${(net + gstAmt).toFixed(2)}</td>
+                            </tr>`;
+                    }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:16px;">No item details available</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+
+            <div>
+                <div class="amount-row"><span class="label">Subtotal</span><span>₹${parseFloat(sale.total_amount).toFixed(2)}</span></div>
+                <div class="amount-row"><span class="label">GST Amount</span><span>₹${parseFloat(sale.gst_amount).toFixed(2)}</span></div>
+                <div class="amount-row"><span class="label">Cash Paid</span><span class="text-success">₹${parseFloat(sale.cash_paid).toFixed(2)}</span></div>
+                <div class="amount-row"><span class="label">UPI / Card</span><span class="text-info">₹${parseFloat(sale.upi_paid).toFixed(2)}</span></div>
+                ${parseFloat(sale.credit_amount) > 0 ? `<div class="amount-row"><span class="label text-danger">⚠️ Udhaar</span><span class="text-danger">₹${parseFloat(sale.credit_amount).toFixed(2)}</span></div>` : ''}
+                <div class="amount-row grand"><span class="label">Grand Total</span><span>₹${parseFloat(sale.final_amount).toFixed(2)}</span></div>
+            </div>`;
+
+                document.getElementById('printSaleBtn').onclick = () => printSale(sale);
+
+                const modalVoidBtn = document.getElementById('modalVoidBtn');
+                if (sale.status === 'VOIDED' || sale.status === 'RETURNED') {
+                    modalVoidBtn.style.display = 'none';
+                } else {
+                    modalVoidBtn.style.display = 'inline-flex';
+                    modalVoidBtn.onclick = async () => {
+                        closeModal('saleModal');
+                        await initVoidSale(sale.id, sale.invoice_number);
+                    };
+                }
+
+                // Issue #8: Resend Receipt
+                const modalWaBtn = document.getElementById('modalWaBtn');
+                const modalCopyBtn = document.getElementById('modalCopyBtn');
+                
+                // Fetch settings if absent
+                if (!currentSettings && window.ReceiptEngine) {
+                    currentSettings = await ReceiptEngine.getInvoiceSettings();
+                }
+
+                if (currentSettings?.whatsapp_receipt_enabled !== false && sale.customer_phone) {
+                    _currentSaleForReceipt = sale;
+                    const items = (sale.items || []).map(i => ({
+                        name: i.name || 'Unknown Item',
+                        quantity: i.quantity,
+                        price: i.price,
+                        discount: i.discount || 0,
+                        gst: i.gst || 0,
+                    }));
+                    const receiptData = {
+                        invoice: sale.invoice_number,
+                        date: sale.created_at_local || sale.created_at,
+                        customer: sale.customer_name || '',
+                        total: sale.final_amount,
+                        cash_paid: sale.cash_paid,
+                        upi_paid: sale.upi_paid,
+                        credit: sale.credit_amount,
+                        change: Math.max(0, (sale.cash_paid + sale.upi_paid) - sale.final_amount),
+                        bill_discount: sale.bill_discount || 0,
+                        discount_type: sale.discount_type || 'flat',
+                        items,
+                    };
+                    _currentWhatsAppText = ReceiptEngine.generateWhatsAppText(receiptData, currentSettings);
+                    _currentWhatsAppUrl = ReceiptEngine.getWhatsAppUrl(sale.customer_phone, _currentWhatsAppText);
+                    
+                    if (_currentWhatsAppUrl) {
+                        modalWaBtn.style.display = 'inline-flex';
+                        modalCopyBtn.style.display = 'inline-flex';
+                    } else {
+                        modalWaBtn.style.display = 'none';
+                        modalCopyBtn.style.display = 'none';
+                    }
+                } else {
+                    modalWaBtn.style.display = 'none';
+                    modalCopyBtn.style.display = 'none';
+                }
+
+            } catch (e) {
+                document.getElementById('saleModalContent').innerHTML =
+                    '<div style="padding:20px;color:var(--danger);">Could not load sale details</div>';
+            }
+        }
+
+        // Direct reprint from table row (no modal)
+        async function reprintSale(id) {
+            try {
+                showToast('Loading invoice...', 'info');
+                const res = await fetch('/api/v1/sale/' + id);
+                if (!res.ok) throw new Error('Not found');
+                const json = await res.json();
+                const sale = json?.data || json;
+                await printSale(sale);
+            } catch (e) {
+                showToast('Could not load sale for reprint', 'error');
+            }
+        }
+
+        // Global state for resending
+        let _currentSaleForReceipt = null;
+        let _currentWhatsAppUrl = null;
+        let _currentWhatsAppText = null;
+
+        async function printSale(sale) {
+            if (!currentSettings && window.ReceiptEngine) {
+                ReceiptEngine.clearSettingsCache();
+                currentSettings = await ReceiptEngine.getInvoiceSettings();
+            }
+
+            const items = (sale.items || []).map(i => ({
+                name: i.name || 'Unknown Item',
+                quantity: i.quantity,
+                price: i.price,
+                discount: i.discount || 0,
+                gst: i.gst || 0,
+            }));
+
+            const receiptData = {
+                invoice: sale.invoice_number,
+                date: sale.created_at_local || sale.created_at,
+                customer: sale.customer_name || '',
+                total: sale.final_amount,
+                cash_paid: sale.cash_paid,
+                upi_paid: sale.upi_paid,
+                credit: sale.credit_amount,
+                change: Math.max(0, (sale.cash_paid + sale.upi_paid) - sale.final_amount),
+                bill_discount: sale.bill_discount || 0,
+                discount_type: sale.discount_type || 'flat',
+                items,
+            };
+
+            const html = ReceiptEngine.generateReceipt(receiptData, currentSettings);
+            ReceiptEngine.printReceipt(html, currentSettings);
+        }
+
+        async function sendSaleWhatsApp() {
+            if (!_currentWhatsAppUrl) return;
+            // Electron-safe
+            if (window.electronAPI?.openExternal) {
+                window.electronAPI.openExternal(_currentWhatsAppUrl);
+            } else {
+                window.open(_currentWhatsAppUrl, '_blank', 'noopener,noreferrer');
+            }
+
+            // Log it
+            if (_currentSaleForReceipt) {
+                const s = _currentSaleForReceipt;
+                fetch('/api/v1/whatsapp/log', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: JSON.stringify({
+                        sale_id: s.id,
+                        invoice_number: s.invoice_number,
+                        customer_phone: s.customer_phone || '',
+                        customer_name: s.customer_name || 'Walk-in',
+                        amount: s.final_amount
+                    })
+                }).catch(console.error);
+            }
+        }
+
+        async function copySaleReceipt() {
+            if (!_currentWhatsAppText) return;
+            try {
+                await navigator.clipboard.writeText(_currentWhatsAppText);
+                showToast('Receipt text copied to clipboard', 'success');
+            } catch (err) {
+                showToast('Failed to copy text', 'error');
+            }
+        }
+
+        // ── TASK 9: Export CSV (filtered data) ───────────────────────────
+        function exportCSV() {
+            const list = lastFilteredSales.length ? lastFilteredSales : allSales;
+            const header = ['Invoice', 'Date', 'Customer', 'Items', 'Amount', 'Cash', 'UPI', 'Credit', 'Discount'];
+            const rows = list.map(s => [
+                s.invoice_number,
+                new Date(s.created_at).toLocaleString('en-IN'),
+                s.customer_name || 'Walk-in',
+                s.item_count || 0,
+                s.final_amount,
+                s.cash_paid,
+                s.upi_paid,
+                s.credit_amount,
+                `${s.bill_discount}${s.discount_type === 'percent' ? '%' : '₹'}`,
+            ]);
+            const csv = [header, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+            const a = Object.assign(document.createElement('a'), {
+                href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })),
+                download: `sales_${new Date().toISOString().split('T')[0]}.csv`,
+            });
+            a.click();
+            showToast(`Exported ${list.length} sales as CSV`, 'success');
+        }
+
+        // ── TASK 8: Collect Udhaar ───────────────────────────────────────
+        async function collectUdhaar(saleId, customerId, amount, customerName) {
+            const confirmed = await kiranaConfirm(
+                'Collect Udhaar',
+                `Collect ₹${amount.toFixed(2)} from ${customerName}?\n\nPayment mode: Cash\n\nThis will reduce their outstanding balance.`,
+                'Collect Cash', 'Cancel'
+            );
+            if (!confirmed) return;
+
+            try {
+                const res = await fetch(`/api/v1/customers/${customerId}/receive-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: parseFloat(amount), payment_mode: 'cash' })
+                });
+                const json = await res.json();
+                if (!res.ok) { showToast(json.message || 'Failed to collect payment', 'error'); return; }
+                showToast(`Payment of ₹${amount} collected from ${customerName}`, 'success');
+                loadSales();
+            } catch (e) {
+                showToast('Network error while collecting payment', 'error');
+            }
+        }
+
+        /* ─── Void Sale from Sales History ─────────────────────────────────── */
+
+        let _voidPinCallback = null;
+
+        function openVoidPinModal(invoiceNumber, callback) {
+            _voidPinCallback = callback;
+            document.getElementById('voidPinInput').value = '';
+            document.getElementById('voidPinModalSubtitle').textContent = `Enter 4-digit PIN to void ${invoiceNumber}`;
+            document.getElementById('voidPinModal').classList.add('open');
+            setTimeout(() => document.getElementById('voidPinInput').focus(), 120);
+        }
+
+        async function submitVoidPin() {
+            const entered = document.getElementById('voidPinInput').value.trim();
+            document.getElementById('voidPinInput').value = '';
+            document.getElementById('voidPinModal').classList.remove('open');
+
+            try {
+                const res = await fetch('/api/v1/verify-manager-pin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin: entered })
+                });
+                const data = await res.json();
+                if (res.ok && data.token) {
+                    window._voidManagerToken = data.token;
+                    if (_voidPinCallback) _voidPinCallback(true);
+                } else {
+                    showToast('Incorrect PIN', 'error');
+                    if (_voidPinCallback) _voidPinCallback(false);
+                }
+            } catch (err) {
+                showToast('PIN verification failed', 'error');
+                if (_voidPinCallback) _voidPinCallback(false);
+            }
+            _voidPinCallback = null;
+        }
+
+        function cancelVoidPin() {
+            document.getElementById('voidPinModal').classList.remove('open');
+            document.getElementById('voidPinInput').value = '';
+            if (_voidPinCallback) _voidPinCallback(false);
+            _voidPinCallback = null;
+        }
+
+        async function initVoidSale(saleId, invoiceNumber) {
+            // Step 1: Confirm intent
+            const confirmed = await kiranaConfirm(
+                'Void Invoice',
+                `This will cancel invoice <strong>${invoiceNumber}</strong> and restore all stock.\n\nThis action <strong>cannot be undone</strong>. Proceed?`,
+                'Yes, Void It',
+                'Cancel'
+            );
+            if (!confirmed) return;
+
+            // Step 2: Manager PIN authorisation
+            openVoidPinModal(invoiceNumber, async (approved) => {
+                if (!approved) return;
+
+                const token = window._voidManagerToken;
+                if (!token) return showToast('Manager token missing. Please try again.', 'error');
+
+                try {
+                    const res = await fetch(`/api/v1/void-sale/${saleId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ manager_override_token: token })
+                    });
+                    const data = await res.json();
+
+                    window._voidManagerToken = null;
+
+                    if (!res.ok) throw new Error(data.error || 'Void failed');
+
+                    showToast(`🗑 Invoice ${invoiceNumber} voided. Stock restored.`, 'success');
+
+                    // Update local state — no full reload needed
+                    const sale = allSales.find(s => s.id === saleId);
+                    if (sale) sale.status = 'VOIDED';
+
+                    updateStats(allSales);
+                    filterAndRender();
+
+                } catch (e) {
+                    showToast(e.message, 'error');
+                }
+            });
+        }
+
+        loadSales();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Unlock</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a0f1e;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(16, 217, 160, 0.10) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(59, 130, 246, 0.07) 0%, transparent 50%);
+            font-family: 'Inter', sans-serif;
+            padding: 24px;
+        }
+
+        .unlock-wrapper {
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            animation: fadeUp 0.4s ease both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Back Button */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #4a5c80;
+            text-decoration: none;
+            margin-bottom: 36px;
+            transition: color 0.2s;
+        }
+
+        .back-btn:hover {
+            color: #10d9a0;
+        }
+
+        /* Avatar */
+        .user-avatar {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 800;
+            color: #fff;
+            margin: 0 auto 16px;
+            box-shadow: 0 0 0 4px rgba(16, 217, 160, 0.15), 0 16px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .user-avatar.role-admin {
+            background: linear-gradient(135deg, #10d9a0 0%, #0891b2 100%);
+        }
+
+        .user-avatar.role-worker {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+
+        .user-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #f0f4fc;
+            margin-bottom: 4px;
+        }
+
+        .user-role {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 99px;
+            display: inline-block;
+            margin-bottom: 32px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .user-role.role-admin {
+            background: rgba(16, 217, 160, 0.15);
+            color: #10d9a0;
+        }
+
+        .user-role.role-worker {
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+        }
+
+        /* Card */
+        .unlock-card {
+            background: #0f1521;
+            border: 1px solid #1e2d45;
+            border-radius: 20px;
+            padding: 32px 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .unlock-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #10d9a0, #3b82f6);
+        }
+
+        /* Password input */
+        .pw-field {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .pw-field label {
+            display: block;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #8ba0c8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            text-align: left;
+        }
+
+        .pw-field input {
+            width: 100%;
+            background: #141c2e;
+            border: 1px solid #1e2d45;
+            border-radius: 12px;
+            padding: 12px 46px 12px 16px;
+            color: #f0f4fc;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            letter-spacing: 0.1em;
+        }
+
+        .pw-field input:focus {
+            border-color: #10d9a0;
+            box-shadow: 0 0 0 3px rgba(16, 217, 160, 0.12);
+        }
+
+        .pw-toggle {
+            position: absolute;
+            right: 14px;
+            bottom: 13px;
+            background: none;
+            border: none;
+            color: #4a5c80;
+            cursor: pointer;
+            font-size: 16px;
+            transition: color 0.2s;
+        }
+
+        .pw-toggle:hover {
+            color: #10d9a0;
+        }
+
+        /* Error */
+        .error-msg {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            color: #ef4444;
+            font-size: 12.5px;
+            padding: 9px 12px;
+            margin-bottom: 16px;
+            display: none;
+            text-align: left;
+        }
+
+        /* Submit button */
+        .btn-unlock {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #10d9a0, #0891b2);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: opacity 0.2s, transform 0.15s;
+        }
+
+        .btn-unlock:hover {
+            opacity: 0.88;
+            transform: translateY(-1px);
+        }
+
+        .btn-unlock:active {
+            transform: translateY(0);
+        }
+
+        .btn-unlock:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Hint */
+        .unlock-footer {
+            margin-top: 20px;
+            font-size: 11.5px;
+            color: #2a3a5c;
+        }
+
+        /* Shake animation on wrong password */
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20% {
+                transform: translateX(-8px);
+            }
+
+            40% {
+                transform: translateX(8px);
+            }
+
+            60% {
+                transform: translateX(-6px);
+            }
+
+            80% {
+                transform: translateX(6px);
+            }
+        }
+
+        .shake {
+            animation: shake 0.45s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="unlock-wrapper">
+        <a href="account-select.html" class="back-btn">← Back to accounts</a>
+
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div class="user-name" id="userName">Loading…</div>
+        <div class="user-role" id="userRole"></div>
+
+        <div class="unlock-card" id="unlockCard">
+            <div class="error-msg" id="errorMsg"></div>
+
+            <form id="unlockForm" onsubmit="handleUnlock(event)">
+                <div class="pw-field">
+                    <label>Password / PIN</label>
+                    <input type="password" id="passwordInput" placeholder="••••••••" autocomplete="current-password"
+                        autofocus>
+                    <button type="button" class="pw-toggle" onclick="togglePw()">👁</button>
+                </div>
+                <button type="submit" class="btn-unlock" id="unlockBtn">Unlock</button>
+            </form>
+
+            <p class="unlock-footer">
+                Logging in as <span id="footerUsername" style="color:#4a5c80;font-weight:600;"></span>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // ─── Get selected user from sessionStorage ────────────────────────
+        const selectedUsername = sessionStorage.getItem('selectedUsername');
+        const selectedName = sessionStorage.getItem('selectedName') || '';
+        const selectedRole = sessionStorage.getItem('selectedRole') || 'worker';
+
+        if (!selectedUsername) {
+            window.location.href = 'account-select.html';
+        }
+
+        // ─── Populate UI ──────────────────────────────────────────────────
+        const initials = selectedName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?';
+        const roleClass = selectedRole === 'admin' ? 'role-admin' : 'role-worker';
+        const roleLabel = selectedRole === 'admin' ? 'Admin' : 'Worker';
+
+        document.getElementById('userAvatar').textContent = initials;
+        document.getElementById('userAvatar').className = `user-avatar ${roleClass}`;
+        document.getElementById('userName').textContent = selectedName;
+        document.getElementById('userRole').textContent = roleLabel;
+        document.getElementById('userRole').className = `user-role ${roleClass}`;
+        document.getElementById('footerUsername').textContent = selectedUsername;
+
+        // ─── Toggle password visibility ───────────────────────────────────
+        function togglePw() {
+            const inp = document.getElementById('passwordInput');
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+        }
+
+        // ─── Handle Login ─────────────────────────────────────────────────
+        async function handleUnlock(e) {
+            e.preventDefault();
+            const btn = document.getElementById('unlockBtn');
+            const errEl = document.getElementById('errorMsg');
+            const card = document.getElementById('unlockCard');
+            const pw = document.getElementById('passwordInput').value;
+
+            btn.disabled = true;
+            btn.textContent = 'Verifying…';
+            errEl.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: selectedUsername,
+                        password: pw
+                    })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    // Wrong password — shake animation
+                    card.classList.remove('shake');
+                    void card.offsetWidth; // reflow to restart
+                    card.classList.add('shake');
+
+                    errEl.textContent = data.message || 'Incorrect password. Try again.';
+                    errEl.style.display = 'block';
+                    document.getElementById('passwordInput').value = '';
+                    document.getElementById('passwordInput').focus();
+                    btn.disabled = false;
+                    btn.textContent = 'Unlock';
+                    return;
+                }
+
+                // ── Success ──
+                const user = data.data;
+                localStorage.setItem('token', user.token);
+                localStorage.setItem('role', user.role);
+                localStorage.setItem('name', user.name);
+                localStorage.setItem('user', user.name);
+
+                if (user.must_change_password) {
+                    localStorage.setItem('must_change_password', '1');
+                } else {
+                    localStorage.removeItem('must_change_password');
+                }
+
+                // Clear sessionStorage
+                sessionStorage.removeItem('selectedUsername');
+                sessionStorage.removeItem('selectedName');
+                sessionStorage.removeItem('selectedRole');
+
+                btn.textContent = '✅ Welcome!';
+
+                setTimeout(() => {
+                    if (user.must_change_password) {
+                        window.location.href = 'change-password.html';
+                    } else {
+                        window.location.href = user.role === 'admin' ? 'index.html' : 'billing.html';
+                    }
+                }, 600);
+
+            } catch (err) {
+                errEl.textContent = 'Network error. Is the server running?';
+                errEl.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Unlock';
+            }
+        }
+    </script>
+</body>
+
+</html>

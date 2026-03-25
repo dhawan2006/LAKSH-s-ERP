@@ -1,0 +1,2409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — POS Billing</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/auth.js?v=2"></script>
+    <script src="js/dialog.js"></script>
+    <script src="js/receipt-engine.js?v=3"></script>
+    <script src="js/offline-queue.js?v=1"></script>
+</head>
+
+<body>
+    <div class="app">
+
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">K</div>
+                    <div class="brand-text">
+                        <h2>Kirana ERP</h2><span>Business Suite</span>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <div class="sidebar-section-label">Main Menu</div>
+                <a href="index.html"><span class="nav-icon">⊞</span> Dashboard</a>
+                <a href="billing.html" class="active"><span class="nav-icon">🧾</span> POS Billing</a>
+                <a href="products.html"><span class="nav-icon">📦</span> Products</a>
+                <a href="categories.html"><span class="nav-icon">🏷️</span> Categories</a>
+                <a href="customers.html"><span class="nav-icon">👥</span> Customers</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Purchase</div>
+                <a href="purchase-orders.html"><span class="nav-icon">📋</span> Purchase Orders</a>
+                <a href="purchases.html"><span class="nav-icon">🛒</span> Purchases</a>
+                <a href="purchase-returns.html"><span class="nav-icon">↩️</span> Purchase Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Sales</div>
+                <a href="sale-orders.html"><span class="nav-icon">📑</span> Sale Orders</a>
+                <a href="sales.html"><span class="nav-icon">📊</span> Sales History</a>
+                <a href="sale-returns.html"><span class="nav-icon">🔄</span> Sale Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Finance</div>
+                <a href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+                <a href="profit-loss.html"><span class="nav-icon">💹</span> Profit &amp; Loss</a>
+                <a href="register.html"><span class="nav-icon">🗃️</span> Register</a>
+                <a href="settings-invoice.html"><span class="nav-icon">⚙️</span> Invoice Settings</a>
+                <a href="backup.html"><span class="nav-icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="store-avatar">S</div>
+                    <div class="store-info">
+                        <h4>Store Admin</h4><span>Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="main">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h3>POS Billing</h3>
+                    <div class="breadcrumb">Point of Sale Terminal</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="status-pill"><span class="status-dot online"></span><span
+                            style="color:var(--success)">Online</span></div>
+                    <div class="topbar-date" id="todayDate"></div>
+                    <div class="topbar-badge" id="heldBillsBtn" title="Recall a held bill"
+                         onclick="openHeldBillsPanel()" style="display:none; position:relative; cursor:pointer;">
+                        ⏸
+                        <span id="heldBillsBadge"
+                              style="position:absolute;top:-4px;right:-4px;background:var(--warning);color:#000;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1;">0</span>
+                    </div>
+                    <div class="topbar-badge" id="currentTime">--:--</div>
+                    <div class="topbar-badge" id="offlinePendingBadge" style="display:none;background:var(--warning-bg);color:var(--warning);cursor:pointer;" title="Pending offline sales" onclick="syncOfflineQueue()">⏳ <span id="offlinePendingCount">0</span></div>
+                    <div class="topbar-badge" style="cursor:pointer;" onclick="toggleShortcutHelp()" title="Keyboard shortcuts (?)">❓</div>
+                </div>
+            </div>
+
+            <div class="content">
+
+
+                <div class="grid-billing" style="display:grid;">
+
+
+                    <!-- LEFT: PRODUCT SEARCH & CUSTOMER -->
+                    <div>
+
+                        <!-- CUSTOMER -->
+                        <div class="glass-card" style="padding:18px 20px; margin-bottom:16px;">
+                            <div class="card-header" style="margin-bottom:12px;">
+                                <div class="card-title">👤 Customer</div>
+                                <button class="btn btn-outline btn-sm" onclick="openModal('quickCustomerModal')">+ Quick
+                                    Add</button>
+                            </div>
+                            <select id="customerSelect" onchange="onCustomerChange()">
+                                <option value="">🛒 Walk-in Customer</option>
+                            </select>
+                            <div id="customerCreditInfo" class="credit-bar" style="display:none;justify-content:space-between;align-items:center;">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <span class="credit-icon">⚠️</span>
+                                    <span class="credit-text" id="creditText">Pending credit: ₹0</span>
+                                </div>
+                                <button class="btn btn-outline btn-sm" onclick="openReceivePayment()" style="flex-shrink:0;">💰 Receive</button>
+                            </div>
+                            <div id="loyaltyInfo" class="credit-bar" style="display:none;justify-content:space-between;align-items:center;background:rgba(34,139,34,0.08);border-color:rgba(34,139,34,0.3);">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <span class="credit-icon">⭐</span>
+                                    <span class="credit-text" style="color:#228B22;" id="loyaltyText">Loyalty: 0 pts</span>
+                                </div>
+                                <button class="btn btn-outline btn-sm" onclick="openRedeemPoints()" style="flex-shrink:0;border-color:rgba(34,139,34,0.4);color:#228B22;">🎁 Redeem</button>
+                            </div>
+                        </div>
+
+                        <!-- PRODUCT SEARCH -->
+                        <div class="glass-card" style="padding:18px 20px;">
+                            <div class="card-header" style="margin-bottom:12px;">
+                                <div class="card-title">📦 Add Products</div>
+                                <span class="badge badge-muted" id="productCount">0 products</span>
+                            </div>
+
+                            <div class="search-bar mb-16" style="margin-bottom:10px;">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" id="searchInput"
+                                    placeholder="🔍 Scan barcode or search product — press Enter to add..."
+                                    oninput="debouncedFilter()" autocomplete="off"
+                                    tabindex="1">
+                            </div>
+
+                            <!-- Product Card Grid (visual) -->
+                            <div class="product-card-grid" id="productCardGrid"></div>
+
+                            <!-- Hidden select for JS logic -->
+                            <div class="product-list-container" style="display:none;">
+                                <select id="productSelect" size="8" ondblclick="addToCart()"></select>
+                            </div>
+
+                            <div
+                                style="display:grid; grid-template-columns:1fr 1fr auto; gap:10px; margin-top:12px; align-items:flex-end;">
+                                <div>
+                                    <label>Quantity</label>
+                                    <input type="number" id="quantity" value="1" min="1" tabindex="2">
+                                </div>
+                                <div>
+                                    <label>Item Discount %</label>
+                                    <input type="number" id="itemDiscount" value="0" min="0" max="100" tabindex="3">
+                                </div>
+                                <button class="btn btn-primary" id="addToCartBtn" onclick="addToCart()"
+                                    style="height:36px; padding:0 18px; align-self:flex-end;" tabindex="4">
+                                    + Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: CART + PAYMENT -->
+                    <div>
+
+                        <!-- CART -->
+                        <div class="glass-card" style="padding:18px 20px; margin-bottom:16px;">
+                            <div class="card-header" style="margin-bottom:14px;">
+                                <div class="card-title">🛒 Cart</div>
+                                <div class="flex gap-8 flex-center">
+                                    <span class="badge badge-info" id="cartCount">0 items</span>
+                                    <button class="btn btn-outline btn-sm" onclick="holdSale()" title="Park this bill and start a new one">⏸ Hold</button>
+                                    <button class="btn btn-danger btn-sm" onclick="clearCart()">Clear</button>
+                                </div>
+                            </div>
+
+                            <!-- Cart empty state -->
+                            <div class="cart-empty" id="cartEmpty">
+                                <span class="cart-empty-icon">🛒</span>
+                                <p style="font-weight:600; color:var(--text-secondary); margin-bottom:4px;">Cart is
+                                    empty</p>
+                                <p style="font-size:12px;">Add products from the left panel</p>
+                            </div>
+
+                            <!-- Cart table -->
+                            <div class="table-wrapper" id="cartTableWrapper" style="display:none;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Qty</th>
+                                            <th>Rate</th>
+                                            <th>Disc%</th>
+                                            <th>GST%</th>
+                                            <th>Total</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cartBody"></tbody>
+                                </table>
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <!-- Amount summary -->
+                            <div class="amount-row">
+                                <span class="label">Subtotal (excl. GST)</span>
+                                <span>₹<span id="subtotal">0.00</span></span>
+                            </div>
+                            <div class="amount-row">
+                                <span class="label">GST Amount</span>
+                                <span>₹<span id="gstTotal">0.00</span></span>
+                            </div>
+                            <div class="amount-row">
+                                <span class="label">Item Discounts</span>
+                                <span class="text-danger">−₹<span id="itemDiscountTotal">0.00</span></span>
+                            </div>
+
+                            <!-- Bill-level discount -->
+                            <div style="margin:12px 0 8px;">
+                                <label>Bill Discount</label>
+                                <div class="discount-row">
+                                    <input type="number" id="billDiscount" value="0" min="0" oninput="renderCart()">
+                                    <select id="discountType" onchange="renderCart()">
+                                        <option value="flat">₹ Flat</option>
+                                        <option value="percent">% Pct</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="amount-row grand">
+                                <span class="label">Grand Total</span>
+                                <span>₹<span id="grandTotal">0.00</span></span>
+                            </div>
+                        </div>
+
+                        <!-- PAYMENT -->
+                        <div class="glass-card" style="padding:18px 20px;">
+                            <div class="card-header" style="margin-bottom:14px;">
+                                <div class="card-title">💳 Payment</div>
+                            </div>
+
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                                <div>
+                                    <label style="display:flex;justify-content:space-between;align-items:center;">💵 Cash Received <button class="btn btn-outline btn-sm" type="button" onclick="toggleDenomPad()" style="font-size:10px;padding:2px 8px;">🪙 Denom</button></label>
+                                    <input type="number" id="cashPaid" value="0" min="0" oninput="updateChange()">
+                                </div>
+                                <div>
+                                    <label>📲 UPI / Card</label>
+                                    <input type="number" id="upiPaid" value="0" min="0" oninput="updateChange()">
+                                </div>
+                            </div>
+
+
+                            <!-- Denomination Pad -->
+                            <div id="denomPad" style="display:none;margin-bottom:10px;">
+                                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;" id="denomGrid"></div>
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+                                    <span style="font-size:11px;color:var(--text-muted);">Denom Total: ₹<span id="denomTotal">0</span></span>
+                                    <button class="btn btn-outline btn-sm" onclick="clearDenomPad()" style="font-size:10px;padding:2px 8px;">Clear</button>
+                                </div>
+                            </div>
+
+                            <!-- Change / Balance -->
+                            <div id="changeDisplay" class="change-display mb-16"
+                                style="margin-bottom:14px; display:none;">
+                                <div class="change-label">Change to Return</div>
+                                <div class="change-amount" id="changeAmount">₹0.00</div>
+                            </div>
+
+                            <div id="creditDisplay" class="credit-bar mb-16" style="margin-bottom:14px; display:none;">
+                                <span class="credit-icon">⚠️</span>
+                                <span class="credit-text">Udhaar / Credit: ₹<span id="creditDue">0.00</span></span>
+                            </div>
+
+                            <button class="btn btn-gold btn-lg btn-full" id="completeSaleBtn" onclick="completeSale()">
+                                ✅ Complete Sale
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- SHORTCUT HELP MODAL -->
+    <div class="modal-overlay" id="shortcutHelpModal">
+        <div class="modal" style="max-width:400px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">Keyboard Shortcuts</div>
+                    <div class="modal-subtitle">Boost your speed at the POS</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('shortcutHelpModal')">✕</button>
+            </div>
+            <div style="padding:16px 0 8px;">
+                <div class="shortcut-row"><span>🔍 Scan/Search Product</span><span>Anywhere</span></div>
+                <div class="shortcut-row"><span>↩️ Add Selected Product</span><span>Enter</span></div>
+                <div class="shortcut-row"><span>💵 Cash Paid</span><span>F2</span></div>
+                <div class="shortcut-row"><span>📲 UPI/Card Paid</span><span>F3</span></div>
+                <div class="shortcut-row"><span>🔄 Focus Search</span><span>F4</span></div>
+                <div class="shortcut-row"><span>⏸ Hold Bill</span><span>F5</span></div>
+                <div class="shortcut-row"><span>🧾 Recall Held Bill</span><span>F6</span></div>
+                <div class="shortcut-row"><span>✅ Complete Sale</span><span>Ctrl/Cmd + Enter</span></div>
+                <div class="shortcut-row"><span>🖨️ Print Invoice</span><span>Ctrl/Cmd + P (on invoice)</span></div>
+                <div class="shortcut-row"><span>❓ Show/Hide Help</span><span>?</span></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('shortcutHelpModal')">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- INVOICE MODAL -->
+    <div class="modal-overlay" id="invoiceModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">Invoice Generated</div>
+                    <div class="modal-subtitle" id="invoiceSubtitle"></div>
+                </div>
+                <button class="modal-close" onclick="closeModal('invoiceModal')">✕</button>
+            </div>
+            <div class="invoice-print-area" id="invoicePrintArea"></div>
+            <div class="modal-actions" style="justify-content:space-between;align-items:center;">
+                <label
+                    style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;">
+                    <input type="checkbox" id="autoPrintNext"
+                        style="width:15px;height:15px;accent-color:var(--accent);"> Auto-print next sale
+                </label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-outline" onclick="closeModal('invoiceModal')">Close</button>
+                    <button class="btn btn-danger btn-sm" id="voidSaleBtn"
+                        onclick="voidCurrentSale()"
+                        title="Void this invoice (within 5 minutes only)"
+                        style="display:none;">🗑 Void</button>
+                    <button class="btn btn-outline" onclick="openReturnFromInvoice()" title="Process a return for this invoice">↩ Return</button>
+                    <button class="btn btn-outline" id="copyReceiptBtn" onclick="copyReceiptText()" title="Copy plain-text receipt to clipboard">📋 Copy Text</button>
+                    <button class="btn" id="waReceiptBtn"
+                        style="display:none;background:#25d366;color:#000;font-weight:700;border:none;"
+                        onclick="sendWhatsAppReceipt()" title="Send receipt via WhatsApp">
+                        📱 WhatsApp
+                    </button>
+                    <button class="btn btn-primary" onclick="printInvoice()" title="Ctrl+P">🖨️ Print Invoice</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK ADD CUSTOMER MODAL -->
+    <div class="modal-overlay" id="quickCustomerModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">Add Customer</div>
+                    <div class="modal-subtitle">Quickly register a new customer</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('quickCustomerModal')">✕</button>
+            </div>
+            <div class="form-group">
+                <label>Customer Name *</label>
+                <input type="text" id="qc_name" placeholder="Full name">
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="qc_phone" placeholder="10-digit number">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('quickCustomerModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveQuickCustomer()">Add Customer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREDIT CONFIRM MODAL -->
+    <div class="modal-overlay" id="creditConfirmModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">Confirm Udhaar (Credit Sale)</div>
+                    <div class="modal-subtitle" id="creditConfirmSubtitle"></div>
+                </div>
+            </div>
+            <div style="padding:16px 0 8px;">
+                <div class="credit-bar" style="display:flex;">
+                    <span class="credit-icon">⚠️</span>
+                    <span class="credit-text" id="creditConfirmText">₹0 will be added as pending Udhaar.</span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" id="creditCancelBtn" onclick="closeModal('creditConfirmModal')">Cancel</button>
+                <button class="btn btn-danger" id="creditConfirmBtn">Confirm Udhaar & Complete Sale</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MANAGER PIN MODAL -->
+    <div class="modal-overlay" id="managerPinModal">
+        <div class="modal" style="max-width:340px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">Manager Authorisation</div>
+                    <div class="modal-subtitle">Enter 4-digit PIN to allow below-cost pricing</div>
+                </div>
+                <button class="modal-close" onclick="cancelManagerPin()">✕</button>
+            </div>
+            <div style="padding:16px 0 8px;">
+                <label>Manager PIN</label>
+                <input type="password" id="managerPinInput" maxlength="4"
+                    placeholder="••••"
+                    style="letter-spacing:6px;font-size:20px;text-align:center;"
+                    onkeydown="if(event.key==='Enter') submitManagerPin()">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="cancelManagerPin()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitManagerPin()">Authorise</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HELD BILLS PANEL -->
+    <div class="modal-overlay" id="heldBillsModal">
+        <div class="modal" style="max-width:420px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">⏸ Held Bills</div>
+                    <div class="modal-subtitle">Select a bill to restore it to the cart</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('heldBillsModal')">✕</button>
+            </div>
+            <div id="heldBillsList" style="padding:8px 0; min-height:60px;"></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('heldBillsModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SALE RETURN MODAL -->
+    <div class="modal-overlay" id="saleReturnModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">↩ Process Sale Return</div>
+                    <div class="modal-title" id="returnSubtitle">Search for an invoice to return</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('saleReturnModal')">✕</button>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:14px;">
+                <input type="text" id="returnInvoiceSearch"
+                    placeholder="Enter invoice number (e.g. INV-00042)..."
+                    style="flex:1;"
+                    onkeydown="if(event.key==='Enter') loadReturnInvoice()">
+                <button class="btn btn-primary" onclick="loadReturnInvoice()">Load</button>
+            </div>
+            <div id="returnItemsArea" style="display:none;">
+                <div class="table-wrapper" style="margin-bottom:14px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Sold Qty</th>
+                                <th>Return Qty</th>
+                                <th>Price</th>
+                                <th>Disc%</th>
+                                <th>Return Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="returnItemsBody"></tbody>
+                    </table>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+                    <div>
+                        <label>💵 Refund Cash</label>
+                        <input type="number" id="returnRefundCash" value="0" min="0">
+                    </div>
+                    <div>
+                        <label>📲 Refund UPI</label>
+                        <input type="number" id="returnRefundUpi" value="0" min="0">
+                    </div>
+                </div>
+                <div style="margin-bottom:14px;">
+                    <label>Reason for Return</label>
+                    <input type="text" id="returnReason" placeholder="Defective, wrong item, customer request...">
+                </div>
+                <div class="amount-row grand">
+                    <span class="label">Total Return Value</span>
+                    <span>₹<span id="returnTotal">0.00</span></span>
+                </div>
+            </div>
+            <div id="returnLoadingMsg" style="display:none;text-align:center;padding:20px;color:var(--text-muted);">
+                Loading invoice...
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('saleReturnModal')">Cancel</button>
+                <button class="btn btn-danger" id="submitReturnBtn" style="display:none;"
+                    onclick="submitSaleReturn()">↩ Submit Return</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECEIVE UDHAAR PAYMENT MODAL -->
+    <div class="modal-overlay" id="receivePaymentModal">
+        <div class="modal" style="max-width:380px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">💰 Receive Udhaar Payment</div>
+                    <div class="modal-subtitle" id="receivePaymentSubtitle">Customer name</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('receivePaymentModal')">✕</button>
+            </div>
+            <div class="credit-bar" style="display:flex;margin-bottom:14px;">
+                <span class="credit-icon">⚠️</span>
+                <span class="credit-text">Outstanding: ₹<span id="receivePaymentOutstanding">0.00</span></span>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Amount Received (₹)</label>
+                <input type="number" id="receivePaymentAmount" min="0.01" step="0.01" placeholder="Enter amount">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Payment Mode</label>
+                <select id="receivePaymentMode">
+                    <option value="cash">💵 Cash</option>
+                    <option value="upi">📲 UPI / Card</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label>Note (optional)</label>
+                <input type="text" id="receivePaymentNote" placeholder="e.g. Paid for January Udhaar">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('receivePaymentModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitUdhaarPayment()">✅ Record Payment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REDEEM LOYALTY POINTS MODAL -->
+    <div class="modal-overlay" id="redeemPointsModal">
+        <div class="modal" style="max-width:380px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">🎁 Redeem Loyalty Points</div>
+                    <div class="modal-subtitle" id="redeemCustomerName">Customer name</div>
+                </div>
+                <button class="modal-close" onclick="cancelRedeemPoints()">✕</button>
+            </div>
+            <div class="credit-bar" style="display:flex;margin-bottom:14px;background:rgba(34,139,34,0.08);border-color:rgba(34,139,34,0.3);">
+                <span class="credit-icon">⭐</span>
+                <span class="credit-text" style="color:#228B22;">Available: <span id="redeemAvailablePoints">0</span> pts</span>
+            </div>
+            <div class="form-group" style="margin-bottom:8px;">
+                <label>Points to redeem</label>
+                <input type="number" id="redeemPointsInput" min="0" value="0" placeholder="Enter points">
+            </div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;font-weight:600;" id="redeemDiscountPreview">= ₹0.00 off</div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="cancelRedeemPoints()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmRedeemPoints()">🎁 Apply Discount</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ─── State ─────────────────────────────────────────────── */
+
+        let cart = [];
+        let allProducts = [];
+        let customers = [];
+        let lastInvoiceCart = [];
+
+        let currentSettings = null;
+        window._lastReceiptSettings = null;
+
+        /* ─── Auto-focus search input and load settings ─────────── */
+        document.addEventListener('DOMContentLoaded', async () => {
+            const si = document.getElementById('searchInput');
+            if (si) si.focus();
+            // Always bust the cache on page load — ensures settings changes
+            // made in Invoice Settings page are immediately reflected here
+            if (window.ReceiptEngine) {
+
+                // check if settings were updated
+                if (localStorage.getItem('kirana_settings_dirty')) {
+                    ReceiptEngine.clearSettingsCache();
+                    localStorage.removeItem('kirana_settings_dirty');
+                }
+
+                currentSettings = await ReceiptEngine.getInvoiceSettings();
+            }
+            // Initial load of data
+            await loadProducts();
+            await loadCustomers();
+            updateHeldBillsBadge();
+            // Restore cart from backup if available
+            try {
+                const backup = localStorage.getItem('pos_cart_backup');
+                if (backup) {
+                    cart = JSON.parse(backup);
+                    renderCart();
+                }
+            } catch(e) { console.error('Failed to restore cart from backup:', e); }
+
+            // Denomination pad setup
+            const denomGrid = document.getElementById('denomGrid');
+            const denominations = [2000, 500, 200, 100, 50, 20, 10, 5, 2, 1];
+            denominations.forEach(d => {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-outline btn-sm';
+                btn.textContent = `₹${d}`;
+                btn.onclick = () => addDenomination(d);
+                denomGrid.appendChild(btn);
+            });
+        });
+
+        /* ─── Cross-tab settings change detection ─────────────────── */
+        // Fires when settings-invoice.html saves in ANOTHER tab
+        window.addEventListener('storage', async (e) => {
+            if (e.key === 'kirana_settings_dirty' && e.newValue === '1') {
+                if (window.ReceiptEngine) {
+                    ReceiptEngine.clearSettingsCache();
+                    currentSettings = await ReceiptEngine.getInvoiceSettings(true);
+                    localStorage.removeItem('kirana_settings_dirty');
+                    console.log('[Billing] Settings refreshed from cross-tab change');
+                }
+            }
+        });
+
+        // Fires when user returns to this tab after editing settings in the same window
+        document.addEventListener('visibilitychange', async () => {
+            if (!document.hidden && window.ReceiptEngine) {
+                const dirty = localStorage.getItem('kirana_settings_dirty');
+                if (dirty === '1') {
+                    ReceiptEngine.clearSettingsCache();
+                    currentSettings = await ReceiptEngine.getInvoiceSettings(true);
+                    localStorage.removeItem('kirana_settings_dirty');
+                    console.log('[Billing] Settings refreshed on tab focus');
+                }
+            }
+        });
+
+        /* ─── Barcode / Scan Functions ───────────────────────────── */
+        /**
+         * scanBarcode — called when Enter is pressed in searchInput with a value
+         * that matches a product barcode exactly (client-side first, then server fallback).
+         */
+        async function scanBarcode(code) {
+            if (!code) return;
+
+            const searchEl = document.getElementById('searchInput');
+
+            // Fast path: check allProducts cache first (avoids network round-trip)
+            const localMatch = allProducts.find(p => p.barcode === code);
+            if (localMatch) {
+                searchEl.value = '';
+                filterProducts();
+                addToCartByProduct(localMatch);
+                flashScannerHighlight(localMatch.name);
+                return;
+            }
+
+            // Server fallback: barcode not yet in local cache
+            try {
+                const res = await fetch(`/api/v1/product-by-barcode/${encodeURIComponent(code)}`);
+                if (res.status === 404) {
+                    showToast(`🔍 Barcode "${code}" — Product not found`, 'error');
+                    return;
+                }
+                if (!res.ok) {
+                    showToast('Barcode lookup failed', 'error');
+                    return;
+                }
+                const json = await res.json();
+                const product = json?.data || json;
+
+                // Sync to local cache
+                if (!allProducts.find(p => p.id === product.id)) {
+                    allProducts.push(product);
+                }
+
+                searchEl.value = '';
+                filterProducts();
+
+                const existingInCart = cart.find(c => c.product_id === product.id);
+                if (existingInCart) {
+                    const p = allProducts.find(p => p.id === product.id) || product;
+                    if (existingInCart.quantity + 1 > p.stock_quantity) {
+                        showToast(`⚠️ Only ${p.stock_quantity} units available for "${product.name}"`, 'error');
+                    } else {
+                        existingInCart.quantity += 1;
+                        renderCart();
+                        flashScannerHighlight(product.name);
+                    }
+                } else {
+                    if (product.stock_quantity <= 0) {
+                        showToast(`"${product.name}" is out of stock`, 'error');
+                        return;
+                    }
+                    cart.push({
+                        product_id: product.id,
+                        name: product.name,
+                        price: product.selling_price,
+                        mrp: product.mrp || 0,
+                        bulk_qty: product.bulk_qty || 0,
+                        bulk_discount: product.bulk_discount || 0,
+                        quantity: 1,
+                        discount: 0,
+                        gst: product.gst_percentage,
+                    });
+                    renderCart();
+                    flashScannerHighlight(product.name);
+                }
+            } catch (err) {
+                showToast('Scanner error. Check connection.', 'error');
+                console.error('Barcode scan error:', err);
+            } finally {
+                setTimeout(() => searchEl.focus(), 50);
+            }
+        }
+
+        function flashScannerHighlight(productName) {
+            const searchEl = document.getElementById('searchInput');
+            searchEl.style.borderColor = 'var(--success)';
+            searchEl.style.boxShadow = '0 0 0 3px rgba(16,217,160,0.3)';
+            showToast(`✅ Scanned: ${productName}`, 'success');
+            setTimeout(() => {
+                searchEl.style.borderColor = '';
+                searchEl.style.boxShadow = '';
+            }, 600);
+        }
+
+        /* ─── Utilities ─────────────────────────────────────────── */
+        function safeRound(num) { return Math.round((num + Number.EPSILON) * 100) / 100; }
+        function fmt2(n) { return Number(n || 0).toFixed(2); }
+
+        function debounce(fn, delay) {
+            let timer;
+            return function(...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+
+        function showToast(msg, type = 'info') {
+            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.innerHTML = `<span>${icons[type]}</span><span class="toast-msg">${msg}</span><button class="toast-close" onclick="this.parentElement.remove()">✕</button>`;
+            document.getElementById('toastContainer').appendChild(el);
+            setTimeout(() => el.remove(), 3500);
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        function toggleShortcutHelp() {
+            const modal = document.getElementById('shortcutHelpModal');
+            if (modal.classList.contains('open')) {
+                closeModal('shortcutHelpModal');
+            } else {
+                openModal('shortcutHelpModal');
+            }
+        }
+
+        /* ─── Date/Time ─────────────────────────────────────────── */
+        document.getElementById('todayDate').textContent =
+            new Date().toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+
+        setInterval(() => {
+            document.getElementById('currentTime').textContent =
+                new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        }, 1000);
+
+        /* ─── Load Products ─────────────────────────────────────── */
+        async function loadProducts() {
+            let all = [];
+            let offset = 0;
+            const batchSize = 200;
+            while (true) {
+                const res = await fetch(`/api/v1/products?limit=${batchSize}&offset=${offset}`);
+                const json = await res.json();
+                const batch = json?.data?.data || json?.data || json;
+                if (!Array.isArray(batch)) break;
+                all = all.concat(batch);
+                if (batch.length < batchSize) break;
+                offset += batchSize;
+            }
+            allProducts = all;
+            document.getElementById('productCount').textContent = allProducts.length + ' products';
+            filterProducts();
+        }
+
+        function filterProducts() {
+            const q = document.getElementById('searchInput').value.toLowerCase().trim();
+            const select = document.getElementById('productSelect');
+            select.innerHTML = '';
+
+            const filtered = q
+                ? allProducts.filter(p =>
+                    p.name.toLowerCase().includes(q) || (p.barcode || '').toLowerCase().includes(q))
+                : allProducts;
+
+            filtered.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = `${p.name}  |  ₹${p.selling_price}  |  Qty: ${p.stock_quantity}`;
+                opt.disabled = p.stock_quantity === 0;
+                select.appendChild(opt);
+            });
+
+            const toRender = filtered.slice(0, 30);
+            renderProductGrid(toRender);
+
+            // Update count badge to show total matches, not just rendered
+            const badge = document.getElementById('productCount');
+            if (q && filtered.length > 30) {
+                badge.textContent = `Showing 30 of ${filtered.length} matches`;
+            } else if (q) {
+                badge.textContent = `${filtered.length} match${filtered.length !== 1 ? 'es' : ''}`;
+            } else {
+                badge.textContent = `${allProducts.length} products`;
+            }
+        }
+
+        const debouncedFilter = debounce(filterProducts, 150);
+
+        /* ─── Product List (compact rows, keyboard navigable) ───── */
+        function renderProductGrid(products) {
+            const container = document.getElementById('productCardGrid');
+
+            if (!products || !products.length) {
+                container.innerHTML = `
+                    <div class="product-row-empty">
+                        <span style="font-size:22px;">📦</span>
+                        <p>No products found</p>
+                    </div>`;
+                return;
+            }
+
+            const frag = document.createDocumentFragment();
+
+            products.forEach((p) => {
+                const isLow = p.stock_quantity > 0 && p.stock_quantity <= (p.low_stock_threshold || 5);
+                const isOut = p.stock_quantity === 0;
+
+                const row = document.createElement('div');
+                row.className = 'product-row' + (isOut ? ' disabled' : '');
+                row.dataset.id = p.id;
+
+                let badgeHtml = '';
+                if (isOut) badgeHtml = '<span class="pr-badge out">Out</span>';
+                else if (isLow) badgeHtml = '<span class="pr-badge low">Low</span>';
+
+                row.innerHTML = `
+                    <span class="pr-name">${p.name}</span>
+                    <span class="pr-price">₹${p.selling_price}</span>
+                    <span class="pr-stock ${isOut ? 'out' : isLow ? 'low' : ''}">${p.stock_quantity}</span>
+                    ${badgeHtml}
+                `;
+
+                if (!isOut) {
+                    row.addEventListener('click', () => {
+                        document.querySelectorAll('.product-row').forEach(r => r.classList.remove('selected'));
+                        quickAddProduct(p.id);
+                    });
+                }
+
+                frag.appendChild(row);
+            });
+
+            container.innerHTML = '';
+            container.appendChild(frag);
+        }
+
+        function quickAddProduct(id) {
+            const product = allProducts.find(p => p.id === id);
+            if (product) {
+                document.getElementById('productSelect').value = id;
+                // Focus and select qty so cashier can immediately type quantity
+                const qtyEl = document.getElementById('quantity');
+                qtyEl.focus();
+                qtyEl.select();
+                addToCartByProduct(product);
+            }
+        }
+
+        /* ─── Load Customers ─────────────────────────────────────── */
+        async function loadCustomers() {
+            const res = await fetch('/api/v1/customers?limit=200');
+            const json = await res.json();
+            customers = json?.data?.data || json?.data || json;
+            const sel = document.getElementById('customerSelect');
+            const prev = sel.value;
+            sel.innerHTML = '<option value="">🛒 Walk-in Customer</option>';
+            customers.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name + (c.credit_balance > 0 ? ` — ₹${c.credit_balance.toFixed(0)} credit` : '');
+                sel.appendChild(opt);
+            });
+            if (prev) sel.value = prev;
+        }
+
+        function onCustomerChange() {
+            const id = document.getElementById('customerSelect').value;
+            const creditInfoEl = document.getElementById('customerCreditInfo');
+            const loyaltyInfoEl = document.getElementById('loyaltyInfo');
+
+
+            if (id) {
+                const c = customers.find(c => c.id == id);
+                if (c) {
+                    if (c.credit_balance > 0) {
+                        document.getElementById('creditText').textContent = `Pending Udhaar: ₹${c.credit_balance.toFixed(2)}`;
+                        creditInfoEl.style.display = 'flex';
+                    } else {
+                        creditInfoEl.style.display = 'none';
+                    }
+                    if (c.loyalty_points > 0) {
+                        document.getElementById('loyaltyText').textContent = `Loyalty: ${c.loyalty_points} pts`;
+                        loyaltyInfoEl.style.display = 'flex';
+                    } else {
+                        loyaltyInfoEl.style.display = 'none';
+                    }
+                    updateChange();
+                    return;
+                }
+            }
+
+            creditInfoEl.style.display = 'none';
+            loyaltyInfoEl.style.display = 'none';
+            updateChange();
+        }
+
+        /* ─── Cart Management ────────────────────────────────────── */
+        function addToCart() {
+            const sel = document.getElementById('productSelect');
+            if (!sel.value) return showToast('Please select a product', 'error');
+            const productId = parseInt(sel.value);
+            addToCartByProduct(allProducts.find(p => p.id === productId));
+        }
+
+        function getBulkDiscount(product, qty) {
+            if (product.bulk_qty > 0 && qty >= product.bulk_qty && product.bulk_discount > 0) {
+                return product.bulk_discount;
+            }
+            return null;
+        }
+
+        function addToCartByProduct(product) {
+            if (!product) return showToast('Product not found', 'error');
+            if (product.stock_quantity <= 0) return showToast(`"${product.name}" is out of stock`, 'error');
+
+            const qty = parseInt(document.getElementById('quantity').value) || 1;
+            let discount = parseFloat(document.getElementById('itemDiscount').value) || 0;
+            if (discount < 0) discount = 0;
+            if (discount > 100) discount = 100;
+
+            const existing = cart.find(c => c.product_id === product.id);
+            if (existing) {
+                const newQty = existing.quantity + qty;
+                if (newQty > product.stock_quantity)
+                    return showToast(`Only ${product.stock_quantity} units available`, 'error');
+                existing.quantity = newQty;
+                // Auto-apply bulk discount
+                const bd = getBulkDiscount(product, newQty);
+                if (bd !== null && existing.discount === 0) {
+                    existing.discount = bd;
+                    showToast(`🎁 Bulk discount ${bd}% auto-applied for ${product.name}!`, 'info');
+                }
+            } else {
+                if (qty > product.stock_quantity)
+                    return showToast(`Only ${product.stock_quantity} units available`, 'error');
+                // Auto-apply bulk discount if no manual discount
+                if (discount === 0) {
+                    const bd = getBulkDiscount(product, qty);
+                    if (bd !== null) {
+                        discount = bd;
+                        showToast(`🎁 Bulk discount ${bd}% auto-applied for ${product.name}!`, 'info');
+                    }
+                }
+                cart.push({
+                    product_id: product.id,
+                    name: product.name,
+                    price: product.selling_price,
+                    cost_price: product.cost_price || 0,
+                    mrp: product.mrp || 0,
+                    bulk_qty: product.bulk_qty || 0,
+                    bulk_discount: product.bulk_discount || 0,
+                    quantity: qty,
+                    discount: discount,
+                    gst: product.gst_percentage,
+                    price_overridden: false,
+                });
+            }
+
+            document.getElementById('quantity').value = 1;
+            document.getElementById('itemDiscount').value = 0;
+            renderCart();
+            showToast(`"${product.name}" added to cart`, 'success');
+            // Return focus to search for next scan
+            setTimeout(() => {
+                const si = document.getElementById('searchInput');
+                if (si) si.focus();
+            }, 50);
+        }
+
+        function removeFromCart(idx) {
+            cart.splice(idx, 1);
+            renderCart();
+        }
+
+        function stepQty(idx, delta) {
+            const newQty = cart[idx].quantity + delta;
+            updateQty(idx, newQty);
+        }
+
+        function updateQty(idx, val) {
+            let qty = parseInt(val);
+            if (isNaN(qty) || qty < 0) qty = 1;
+            if (qty === 0) return removeFromCart(idx);
+            const p = allProducts.find(p => p.id === cart[idx].product_id);
+            if (p && qty > p.stock_quantity) return showToast(`Only ${p.stock_quantity} units available`, 'error');
+            cart[idx].quantity = qty || 1;
+            // Re-check bulk discount
+            if (p && cart[idx].bulk_qty > 0) {
+                const bd = getBulkDiscount(p, qty);
+                if (bd !== null && cart[idx].discount === 0) cart[idx].discount = bd;
+                else if (bd === null && cart[idx].discount === p.bulk_discount) cart[idx].discount = 0;
+            }
+            renderCart();
+        }
+
+        function updateDisc(idx, val) {
+            let d = parseFloat(val);
+            if (isNaN(d) || d < 0) d = 0;
+            if (d > 100) d = 100;
+            cart[idx].discount = d;
+            renderCart();
+        }
+
+        function updatePrice(idx, val) {
+            const newPrice = parseFloat(val);
+            if (isNaN(newPrice) || newPrice < 0) {
+                renderCart(); // revert invalid input
+                return;
+            }
+            const item = cart[idx];
+            const product = allProducts.find(p => p.id === item.product_id);
+            const originalPrice = product?.selling_price;
+
+            // Client-side MRP warning (server is the authority)
+            if (product && product.mrp > 0 && newPrice > product.mrp) {
+                showToast(`⚠️ ₹${newPrice} exceeds MRP ₹${product.mrp} — server will reject this`, 'error');
+                renderCart(); // revert
+                return;
+            }
+
+            // Any price change requires manager PIN (FIX 2)
+            if (newPrice !== originalPrice) {
+                openManagerPinModal((approved) => {
+                    if (approved) {
+                        item.price = newPrice;
+                        item.price_overridden = true;
+                        renderCart();
+                        showToast(`Price updated to ₹${newPrice}`, 'info');
+                    } else {
+                        renderCart(); // revert
+                    }
+                });
+                return;
+            }
+
+            // Price matches catalogue — apply directly, no override needed
+            item.price = newPrice;
+            item.price_overridden = false;
+            renderCart();
+        }
+
+        /* ─── Manager PIN Modal ──────────────────────────────── */
+        let _pinCallback = null;
+
+        function openManagerPinModal(callback) {
+            _pinCallback = callback;
+            document.getElementById('managerPinInput').value = '';
+            openModal('managerPinModal');
+            setTimeout(() => document.getElementById('managerPinInput').focus(), 100);
+        }
+
+        async function submitManagerPin() {
+            const entered = document.getElementById('managerPinInput').value;
+            document.getElementById('managerPinInput').value = '';
+            closeModal('managerPinModal');
+
+            try {
+                const res = await fetch('/api/v1/verify-manager-pin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin: entered })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    window._managerOverrideToken = data.token;
+                    if (_pinCallback) _pinCallback(true);
+                } else {
+                    showToast('Incorrect PIN', 'error');
+                    if (_pinCallback) _pinCallback(false);
+                }
+            } catch (e) {
+                console.error('[submitManagerPin]', e);
+                showToast('PIN verification failed', 'error');
+                if (_pinCallback) _pinCallback(false);
+            }
+            _pinCallback = null;
+        }
+
+        function cancelManagerPin() {
+            closeModal('managerPinModal');
+            if (_pinCallback) _pinCallback(false);
+            _pinCallback = null;
+        }
+
+        /* ─── Hold / Park Sale ───────────────────────────────────────── */
+        const MAX_HELD = 3;
+
+        async function holdSale() {
+            if (!cart.length) return showToast('Cart is empty — nothing to hold', 'error');
+
+            // Find next available slot by checking server
+            let held = [];
+            try {
+                const r = await fetch('/api/v1/held-bills');
+                const j = await r.json();
+                held = j.data || [];
+            } catch(e) {}
+
+            const usedSlots = held.map(h => h.slot);
+            let slot = null;
+            for (let i = 1; i <= MAX_HELD; i++) {
+                if (!usedSlots.includes(i)) { slot = i; break; }
+            }
+
+            if (slot === null) {
+                return showToast(`Max ${MAX_HELD} bills can be held. Recall one first.`, 'error');
+            }
+
+            const payload = {
+                slot,
+                cart: JSON.parse(JSON.stringify(cart)),
+                customerId: document.getElementById('customerSelect').value,
+                customerName: document.getElementById('customerSelect').options[document.getElementById('customerSelect').selectedIndex]?.text || '',
+                billDiscount: document.getElementById('billDiscount').value,
+                discountType: document.getElementById('discountType').value,
+                grandTotal: document.getElementById('grandTotal').textContent,
+                itemCount: cart.length,
+            };
+
+            try {
+                const r = await fetch('/api/v1/held-bills', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!r.ok) throw new Error('Failed to hold bill');
+            } catch(e) {
+                return showToast('Failed to hold bill — server error', 'error');
+            }
+
+            cart = [];
+            renderCart();
+            document.getElementById('cashPaid').value = 0;
+            document.getElementById('upiPaid').value = 0;
+            document.getElementById('billDiscount').value = 0;
+            document.getElementById('discountType').value = 'flat';
+            document.getElementById('customerSelect').value = '';
+            document.getElementById('customerCreditInfo').style.display = 'none';
+            document.getElementById('loyaltyInfo').style.display = 'none';
+
+
+            await updateHeldBillsBadge();
+            showToast(`Bill held in slot ${slot} (${payload.itemCount} items, ₹${payload.grandTotal})`, 'success');
+        }
+
+        async function recallSale(slot) {
+            if (cart.length > 0) {
+                if (!(await kiranaConfirm('Restore Held Bill', 'Current cart has items. Restore held bill and lose current items?'))) return;
+            }
+
+            let held;
+            try {
+                const r = await fetch('/api/v1/held-bills');
+                const j = await r.json();
+                held = (j.data || []).find(h => h.slot === slot);
+            } catch(e) {
+                return showToast('Failed to load held bill', 'error');
+            }
+
+            if (!held) return showToast('Held bill not found', 'error');
+
+            let parsedCart;
+            try {
+                parsedCart = typeof held.cart_json === 'string' ? JSON.parse(held.cart_json) : held.cart_json;
+            } catch(e) {
+                return showToast('Held bill data corrupted', 'error');
+            }
+
+            // Delete from server
+            await fetch(`/api/v1/held-bills/${slot}`, { method: 'DELETE' });
+
+            // Validate items still available
+            cart = parsedCart.filter(item => {
+                const live = allProducts.find(p => p.id === item.product_id);
+                return live && live.stock_quantity > 0;
+            }).map(item => {
+                const live = allProducts.find(p => p.id === item.product_id);
+                return { ...item, price: item.price_overridden ? item.price : live.selling_price };
+            });
+
+            if (held.customer_id) {
+                document.getElementById('customerSelect').value = held.customer_id;
+                onCustomerChange();
+            }
+            document.getElementById('billDiscount').value = held.bill_discount || 0;
+            document.getElementById('discountType').value = held.discount_type || 'flat';
+
+            renderCart();
+            await updateHeldBillsBadge();
+            closeModal('heldBillsModal');
+            showToast(`Bill restored: ${cart.length} items`, 'success');
+        }
+
+        async function openHeldBillsPanel() {
+            const list = document.getElementById('heldBillsList');
+            list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;">Loading...</p>';
+            openModal('heldBillsModal');
+
+            let items = [];
+            try {
+                const r = await fetch('/api/v1/held-bills');
+                const j = await r.json();
+                items = j.data || [];
+            } catch(e) {}
+
+            if (items.length === 0) {
+                list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;">No held bills</p>';
+            } else {
+                list.innerHTML = items.map(h => `
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 4px;border-bottom:1px solid var(--border);">
+                        <div>
+                            <div style="font-size:13px;font-weight:600;color:var(--text-primary);">
+                                Slot ${h.slot} — ${h.item_count} item${h.item_count !== 1 ? 's' : ''} · ₹${h.grand_total}
+                            </div>
+                            <div style="font-size:11px;color:var(--text-muted);">
+                                ${h.customer_name && h.customer_name !== '🛒 Walk-in Customer' ? h.customer_name + ' · ' : ''}Held at ${new Date(h.held_at).toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'})}
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:6px;">
+                            <button class="btn btn-primary btn-sm" onclick="recallSale(${h.slot})">Restore</button>
+                            <button class="btn btn-danger btn-sm" onclick="discardHeld(${h.slot})">Discard</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function discardHeld(slot) {
+            await fetch(`/api/v1/held-bills/${slot}`, { method: 'DELETE' });
+            await updateHeldBillsBadge();
+            openHeldBillsPanel();
+            showToast(`Held bill slot ${slot} discarded`, 'info');
+        }
+
+        async function updateHeldBillsBadge() {
+            let count = 0;
+            try {
+                const r = await fetch('/api/v1/held-bills');
+                const j = await r.json();
+                count = (j.data || []).length;
+            } catch(e) {}
+
+            const btn = document.getElementById('heldBillsBtn');
+            const badge = document.getElementById('heldBillsBadge');
+            if (count > 0) {
+                btn.style.display = 'flex';
+                badge.textContent = count;
+            } else {
+                btn.style.display = 'none';
+            }
+        }
+
+        function clearCart() {
+            if (!cart.length) return;
+            cart = [];
+            renderCart();
+        }
+
+        function renderCart() {
+            const isEmpty = cart.length === 0;
+            document.getElementById('cartEmpty').style.display = isEmpty ? 'block' : 'none';
+            document.getElementById('cartTableWrapper').style.display = isEmpty ? 'none' : 'block';
+            document.getElementById('cartCount').textContent = cart.length + ' item' + (cart.length !== 1 ? 's' : '');
+
+            if (!isEmpty) {
+                document.getElementById('cartBody').innerHTML = cart.map((item, i) => {
+                    const raw = item.price * item.quantity;
+                    const disc = raw * (item.discount / 100);
+                    const net = raw - disc;
+                    const gst = net * (item.gst / 100);
+                    const total = net + gst;
+                    return `<tr>
+                <td class="td-primary" style="max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.name}</td>
+                <td style="white-space:nowrap;">
+                    <button class="btn btn-outline btn-sm" onclick="stepQty(${i},-1)" style="width:22px;height:22px;padding:0;font-size:14px;line-height:1;vertical-align:middle;">−</button>
+                    <input type="number" value="${item.quantity}" min="1" style="width:40px;padding:4px 4px;font-size:12px;text-align:center;display:inline-block;vertical-align:middle;"
+                        onchange="updateQty(${i}, this.value)">
+                    <button class="btn btn-outline btn-sm" onclick="stepQty(${i},1)" style="width:22px;height:22px;padding:0;font-size:14px;line-height:1;vertical-align:middle;">+</button>
+                </td>
+                <td><input type="number"
+                    value="${item.price}"
+                    min="0"
+                    step="0.01"
+                    style="width:72px;padding:4px 6px;font-size:12px;${item.price_overridden ? 'background:rgba(234,179,8,0.15);border-color:rgba(234,179,8,0.5);color:#fbbf24;' : ''}"
+                    onchange="updatePrice(${i}, this.value)"
+                    title="Edit price"></td>
+                <td>
+                    <input type="number" min="0" max="100" value="${item.discount}"
+                        style="width:52px;padding:3px 5px;font-size:12px;text-align:center;"
+                        onchange="updateDisc(${i}, this.value)"
+                        title="Edit item discount %">
+                </td>
+                <td>${item.gst}%</td>
+                <td class="td-amount">₹${total.toFixed(2)}</td>
+                <td><button class="btn btn-danger btn-icon" onclick="removeFromCart(${i})" title="Remove">✕</button></td>
+            </tr>`;
+                }).join('');
+            }
+
+            // Totals — apply bill discount BEFORE GST (FIX 4)
+            let rawSubtotal = 0;
+            let itemDiscountTotal = 0;
+            let netSubtotal = 0;
+            let gstTotal = 0;
+
+            cart.forEach(item => {
+                const raw = safeRound(item.price * item.quantity);
+                const itemDisc = safeRound(raw * (item.discount / 100));
+                const net = safeRound(raw - itemDisc);
+                rawSubtotal += raw;
+                itemDiscountTotal += itemDisc;
+                netSubtotal += net;
+            });
+
+            // Apply bill discount to NET subtotal (before GST)
+            let billDisc = parseFloat(document.getElementById('billDiscount').value) || 0;
+            if (billDisc < 0) billDisc = 0;
+            const discType = document.getElementById('discountType').value;
+            if (discType === 'percent' && billDisc > 100) billDisc = 100;
+
+            let billDiscAmt = discType === 'percent'
+                ? safeRound(netSubtotal * (billDisc / 100))
+                : billDisc;
+            if (billDiscAmt > netSubtotal) billDiscAmt = netSubtotal;
+
+            const taxableSubtotal = safeRound(netSubtotal - billDiscAmt);
+
+            // Compute GST on the discounted taxable amount per item (proportional split)
+            const billDiscRatio = netSubtotal > 0 ? (billDiscAmt / netSubtotal) : 0;
+            cart.forEach(item => {
+                const raw = safeRound(item.price * item.quantity);
+                const itemDisc = safeRound(raw * (item.discount / 100));
+                const net = safeRound(raw - itemDisc);
+                const netAfterBillDisc = safeRound(net * (1 - billDiscRatio));
+                gstTotal += safeRound(netAfterBillDisc * (item.gst / 100));
+            });
+
+            const grand = safeRound(taxableSubtotal + gstTotal);
+
+            document.getElementById('subtotal').textContent = fmt2(taxableSubtotal);
+            document.getElementById('gstTotal').textContent = fmt2(safeRound(gstTotal));
+            document.getElementById('itemDiscountTotal').textContent = fmt2(safeRound(itemDiscountTotal));
+            document.getElementById('grandTotal').textContent = fmt2(grand);
+
+            updateChange();
+
+            try { localStorage.setItem('pos_cart_backup', JSON.stringify(cart)); } catch(e) {}
+        }
+
+        let currentDenomTotal = 0;
+        function toggleDenomPad() {
+            const denomPad = document.getElementById('denomPad');
+            denomPad.style.display = denomPad.style.display === 'none' ? 'block' : 'none';
+            if (denomPad.style.display === 'block') {
+                currentDenomTotal = 0;
+                document.getElementById('denomTotal').textContent = currentDenomTotal;
+            }
+        }
+
+        function addDenomination(value) {
+            currentDenomTotal += value;
+            document.getElementById('denomTotal').textContent = currentDenomTotal;
+            document.getElementById('cashPaid').value = currentDenomTotal;
+            updateChange();
+        }
+
+        function clearDenomPad() {
+            currentDenomTotal = 0;
+            document.getElementById('denomTotal').textContent = currentDenomTotal;
+            document.getElementById('cashPaid').value = 0;
+            updateChange();
+        }
+
+        function updateChange() {
+            const grand = parseFloat(document.getElementById('grandTotal').textContent) || 0;
+            const cash = parseFloat(document.getElementById('cashPaid').value) || 0;
+            const upi = parseFloat(document.getElementById('upiPaid').value) || 0;
+
+            const paid = cash + upi;
+            const diff = paid - grand;
+
+            const changeEl = document.getElementById('changeDisplay');
+            const creditEl = document.getElementById('creditDisplay');
+
+            if (diff >= 0 && grand > 0) {
+                document.getElementById('changeAmount').textContent = '₹' + diff.toFixed(2);
+                changeEl.style.display = 'block';
+                creditEl.style.display = 'none';
+            } else if (diff < 0 && grand > 0) {
+                document.getElementById('creditDue').textContent = Math.abs(diff).toFixed(2);
+                creditEl.style.display = 'flex';
+                changeEl.style.display = 'none';
+            } else {
+                changeEl.style.display = 'none';
+                creditEl.style.display = 'none';
+            }
+        }
+
+        /* ─── Credit Sale Confirmation ───────────────────────────── */
+        function confirmCreditAndSell(creditAmt, custName, onConfirm) {
+            document.getElementById('creditConfirmSubtitle').textContent =
+                `Customer: ${custName}`;
+            document.getElementById('creditConfirmText').textContent =
+                `₹${creditAmt.toFixed(2)} will be added as pending Udhaar for ${custName}.`;
+
+            const confirmBtn = document.getElementById('creditConfirmBtn');
+            // Remove old listener before adding new one to avoid stacking
+            const newBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+            newBtn.addEventListener('click', () => {
+                closeModal('creditConfirmModal');
+                onConfirm();
+            });
+
+            openModal('creditConfirmModal');
+        }
+
+        /* ─── Complete Sale ──────────────────────────────────────── */
+        let isProcessingSale = false;
+        
+        async function completeSale(skipCreditConfirm = false) {
+            if (!cart.length) return showToast('Cart is empty', 'error');
+            if (isProcessingSale) return;
+            
+            isProcessingSale = true;
+            const btn = document.getElementById('completeSaleBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Processing...';
+
+            // ── CRITICAL: snapshot all values BEFORE any reset ───────
+            const customerId = document.getElementById('customerSelect').value;
+            const cashPaid = Math.max(0, parseFloat(document.getElementById('cashPaid').value) || 0);
+            const upiPaid = Math.max(0, parseFloat(document.getElementById('upiPaid').value) || 0);
+            const billDiscount = parseFloat(document.getElementById('billDiscount').value) || 0;
+            const discountType = document.getElementById('discountType').value;
+            const custName = document.getElementById('customerSelect')
+                .options[document.getElementById('customerSelect').selectedIndex]?.text || '';
+
+            const grandTotal = parseFloat(document.getElementById('grandTotal').textContent) || 0;
+            const creditWillBe = Math.max(0, grandTotal - cashPaid - upiPaid);
+
+            if (creditWillBe > 0 && !customerId) {
+                isProcessingSale = false;
+                btn.disabled = false;
+                btn.textContent = '✅ Complete Sale';
+                return showToast('Credit sale requires a customer to be selected!', 'error');
+            }
+
+            // If credit will be created, ask for explicit confirmation before proceeding
+            if (!skipCreditConfirm && creditWillBe > 0 && customerId) {
+                isProcessingSale = false;
+                btn.disabled = false;
+                btn.textContent = '✅ Complete Sale';
+                confirmCreditAndSell(creditWillBe, custName, () => completeSale(true));
+                return;
+            }
+
+            // Snapshot cart before clearing
+            lastInvoiceCart = JSON.parse(JSON.stringify(cart));
+
+            try {
+                const idempotencyKey = 'txn_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+                const payload = {
+                    items: cart,
+                    cash_paid: cashPaid,
+                    upi_paid: upiPaid,
+                    customer_id: customerId || null,
+                    bill_discount: billDiscount,
+                    discount_type: discountType,
+                    manager_override_token: window._managerOverrideToken || null,
+                };
+
+                let response;
+                try {
+                    response = await fetch('/api/v1/create-sale', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Idempotency-Key': idempotencyKey
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                } catch (networkErr) {
+                    // Server unreachable — queue for later sync
+                    if (typeof OfflineQueue !== 'undefined') {
+                        await OfflineQueue.enqueue({
+                            url: '/api/v1/create-sale',
+                            idempotencyKey,
+                            payload,
+                        });
+                        cart = [];
+                        renderCart();
+                        document.getElementById('cashPaid').value = 0;
+                        document.getElementById('upiPaid').value = 0;
+                        document.getElementById('billDiscount').value = 0;
+                        document.getElementById('customerSelect').value = '';
+                        document.getElementById('customerCreditInfo').style.display = 'none';
+                        document.getElementById('loyaltyInfo').style.display = 'none';
+                        updateOfflineBadge();
+                        showToast('📡 Offline — sale queued. Will sync when server is back.', 'info');
+                        return;
+                    }
+                    throw networkErr;
+                }
+
+                const json = await response.json();
+
+                if (!response.ok) {
+                    return showToast(json.message || json.error || 'Sale failed', 'error');
+                }
+
+                const data = json?.data || json;
+
+                // Use server total as source of truth (FIX 5)
+                const serverTotal = Number(data.total);
+                const actualChange = Math.max(0, cashPaid + upiPaid - serverTotal);
+                const actualCredit = Math.max(0, serverTotal - cashPaid - upiPaid);
+
+                // ── Reset UI BEFORE showing invoice (order matters!) ──
+                cart = [];
+                renderCart();
+                document.getElementById('cashPaid').value = 0;
+                document.getElementById('upiPaid').value = 0;
+                document.getElementById('billDiscount').value = 0;
+                document.getElementById('customerSelect').value = '';
+                document.getElementById('customerCreditInfo').style.display = 'none';
+                document.getElementById('loyaltyInfo').style.display = 'none';
+
+                // Optimistic stock update (FIX 4) — avoid full product reload
+                lastInvoiceCart.forEach(item => {
+                    const p = allProducts.find(p => p.id === item.product_id);
+                    if (p) {
+                        p.stock_quantity = Math.max(0, p.stock_quantity - item.quantity);
+                    }
+                });
+                filterProducts();
+
+                // Only reload customers if credit was extended
+                if (data.credit > 0 || data.points_earned > 0) {
+                    loadCustomers();
+                }
+
+                // Show loyalty points toast
+                if (data.points_earned > 0) {
+                    showToast(`⭐ ${data.points_earned} loyalty points earned!`, 'info');
+                }
+
+                // ── Show invoice with snapshotted values ──────────────
+                await showInvoice(data, {
+                    cashPaid, upiPaid, billDiscount, discountType, custName,
+                    customerId,
+                    authorizedTotal: serverTotal,
+                    change: actualChange,
+                    credit: actualCredit
+                });
+                showToast(`✅ Sale done! Invoice: ${data.invoice}`, 'success');
+
+            } catch (e) {
+                console.error('[completeSale]', e);
+                showToast('Network error. Please try again.', 'error');
+            } finally {
+                isProcessingSale = false;
+                btn.disabled = false;
+                btn.textContent = '✅ Complete Sale';
+                window._managerOverrideToken = null;
+            }
+        }
+
+        /* ─── Invoice ─────────────────────────────────────────────── */
+        let _lastInvoiceNumber = '';
+        let _lastWhatsAppText = '';
+        let _lastWhatsAppUrl = null;
+
+        async function showInvoice(data, snapshot = {}) {
+            _lastInvoiceNumber = data.invoice;
+            const shopName = currentSettings?.shop_name || 'My Shop';
+            document.getElementById('invoiceSubtitle').textContent =
+                `${data.invoice} · ₹${Number(data.total).toFixed(2)}`;
+
+            // Use snapshotted values passed in — NEVER read from DOM here
+            const cashPaid = snapshot.cashPaid || 0;
+            const upiPaid = snapshot.upiPaid || 0;
+            const billDiscount = snapshot.billDiscount || 0;
+            const discountType = snapshot.discountType || 'flat';
+            const custName = snapshot.custName || '';
+            const change = snapshot.change ?? Math.max(0, (cashPaid + upiPaid) - data.total);
+
+            // Always re-fetch settings before generating invoice so changes in
+            // the Invoice Settings page are reflected immediately (cache TTL is
+            // now 30 s, but we bust it unconditionally here so even in-tab changes
+            // made via the settings page take effect on the very next sale).
+            if (window.ReceiptEngine) {
+                try {
+                    ReceiptEngine.clearSettingsCache();
+                    currentSettings = await ReceiptEngine.getInvoiceSettings(true);
+                    localStorage.removeItem('kirana_settings_dirty');
+                } catch (settingsErr) {
+                    console.error('[Billing] Failed to fetch settings:', settingsErr);
+                }
+            }
+
+            // Guarantee settings is never null
+            const settings = await ReceiptEngine.getInvoiceSettings(true);
+            
+            console.log('[Billing] Using settings — printer_mode:', settings.printer_mode, 'shop:', settings.shop_name, 'full:', JSON.stringify(settings));
+
+            const receiptData = {
+                invoice: data.invoice,
+                date: new Date().toISOString(),
+                customer: custName === '🛒 Walk-in Customer' ? '' : custName,
+                items: lastInvoiceCart,
+                total: data.total,
+                cash_paid: cashPaid,
+                upi_paid: upiPaid,
+                credit: snapshot.credit ?? (data.credit || 0),
+                change: change,
+                bill_discount: billDiscount,
+                discount_type: discountType,
+                points_earned: data.points_earned || 0,
+            };
+
+            const html = ReceiptEngine.generateReceipt(receiptData, settings);
+
+            const area = document.getElementById('invoicePrintArea');
+            area.style.padding = '0';
+            area.style.background = 'transparent';
+            ReceiptEngine.previewReceipt(html, area, settings);
+
+            // Store for printing / auto-print
+            window._lastReceiptSettings = settings;
+            window._lastReceiptHtml = html;
+
+            // ── WhatsApp Receipt ──────────────────────────────────────
+            _lastWhatsAppText = ReceiptEngine.generateWhatsAppText(receiptData, settings);
+            _lastWhatsAppUrl = null;
+
+            const waBtn = document.getElementById('waReceiptBtn');
+            if (settings.whatsapp_receipt_enabled !== false) {
+                // Find customer phone from the customers array
+                const custId = snapshot.customerId || '';
+                const custObj = custId ? customers.find(c => c.id == custId) : null;
+                const custPhone = custObj?.phone || '';
+                _lastWhatsAppUrl = ReceiptEngine.getWhatsAppUrl(custPhone, _lastWhatsAppText);
+
+                if (_lastWhatsAppUrl) {
+                    waBtn.style.display = 'inline-flex';
+                    waBtn.textContent = `📱 WhatsApp → ${custObj?.name || 'Customer'}`;
+                    
+                    // Attach context for send logging
+                    waBtn.dataset.saleId = data.id || '';
+                    waBtn.dataset.invoiceNumber = data.invoice || '';
+                    waBtn.dataset.customerPhone = custPhone;
+                    waBtn.dataset.customerName = custObj?.name || 'Walk-in';
+                    waBtn.dataset.amount = data.total || 0;
+                } else {
+                    waBtn.style.display = 'none';
+                }
+            } else {
+                waBtn.style.display = 'none';
+            }
+
+            openModal('invoiceModal');
+
+            // Show void button — only if within 5 minutes
+            const voidBtn = document.getElementById('voidSaleBtn');
+            if (voidBtn) {
+                voidBtn.style.display = 'inline-flex';
+                voidBtn.dataset.saleId = data.id || '';
+                // Auto-hide after 5 minutes
+                setTimeout(() => { voidBtn.style.display = 'none'; }, 5 * 60 * 1000);
+            }
+
+            // Auto-print if checkbox is ticked
+            if (document.getElementById('autoPrintNext')?.checked) {
+                setTimeout(() => ReceiptEngine.printReceipt(html, settings), 600);
+            }
+        }
+
+        function printInvoice() {
+            if (window._lastReceiptHtml) {
+                ReceiptEngine.printReceipt(window._lastReceiptHtml, window._lastReceiptSettings || currentSettings);
+            }
+        }
+
+        function sendWhatsAppReceipt() {
+            if (!_lastWhatsAppUrl) return;
+            // Electron-safe: use IPC bridge if available, else browser fallback
+            if (window.electronAPI?.openExternal) {
+                window.electronAPI.openExternal(_lastWhatsAppUrl);
+            } else {
+                window.open(_lastWhatsAppUrl, '_blank', 'noopener,noreferrer');
+            }
+
+            // Log the send
+            const btn = document.getElementById('waReceiptBtn');
+            const payload = {
+                sale_id: btn.dataset.saleId,
+                invoice_number: btn.dataset.invoiceNumber,
+                customer_phone: btn.dataset.customerPhone,
+                customer_name: btn.dataset.customerName,
+                amount: btn.dataset.amount
+            };
+            if (payload.sale_id && payload.invoice_number) {
+                fetch('/api/v1/whatsapp/log', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: JSON.stringify(payload)
+                }).catch(console.error);
+            }
+        }
+
+        async function copyReceiptText() {
+            const text = _lastWhatsAppText || '';
+            if (!text) return;
+            const btn = document.getElementById('copyReceiptBtn');
+            try {
+                await navigator.clipboard.writeText(text);
+                btn.textContent = '✅ Copied!';
+                btn.style.color = '#10d9a0';
+                setTimeout(() => { btn.textContent = '📋 Copy Text'; btn.style.color = ''; }, 2000);
+            } catch (e) {
+                // Clipboard API unavailable (HTTP or old browser) — fallback
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                btn.textContent = '✅ Copied!';
+                btn.style.color = '#10d9a0';
+                setTimeout(() => { btn.textContent = '📋 Copy Text'; btn.style.color = ''; }, 2000);
+            }
+        }
+
+        /* ─── Global Keyboard Shortcuts ─────────────────────────── */
+        document.addEventListener('keydown', function (e) {
+            const isModal = document.querySelector('.modal-overlay.open');
+
+            // Ctrl/Cmd+P — print invoice (only when invoice modal open)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                const modal = document.getElementById('invoiceModal');
+                if (modal && modal.classList.contains('open')) {
+                    e.preventDefault();
+                    printInvoice();
+                }
+                return;
+            }
+
+            // Ctrl/Cmd+Enter — complete sale (only when no modal open, cart not empty)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                if (!isModal && cart.length > 0) {
+                    e.preventDefault();
+                    document.getElementById('completeSaleBtn').click();
+                }
+                return;
+            }
+
+            // Skip remaining shortcuts when a modal is open
+            if (isModal) return;
+
+            // Escape — clear search input, reset product list, return focus to search
+            if (e.key === 'Escape') {
+                const searchEl = document.getElementById('searchInput');
+                if (searchEl) {
+                    searchEl.value = '';
+                    filterProducts();
+                    searchEl.focus();
+                }
+                return;
+            }
+
+            // F2 — jump to cash received input
+            if (e.key === 'F2') {
+                e.preventDefault();
+                const el = document.getElementById('cashPaid');
+                if (el) { el.focus(); el.select(); }
+                return;
+            }
+
+            // F3 — jump to UPI input
+            if (e.key === 'F3') {
+                e.preventDefault();
+                const el = document.getElementById('upiPaid');
+                if (el) { el.focus(); el.select(); }
+                return;
+            }
+
+            // F4 — return focus to search (fast re-scan)
+            if (e.key === 'F4') {
+                e.preventDefault();
+                const el = document.getElementById('searchInput');
+                if (el) el.focus();
+                return;
+            }
+
+            // F5 — hold current bill
+            if (e.key === 'F5') {
+                e.preventDefault();
+                holdSale();
+                return;
+            }
+
+            // F6 — recall held bill
+            if (e.key === 'F6') {
+                e.preventDefault();
+                openHeldBillsPanel();
+                return;
+            }
+
+            // ? — show shortcut help (only when not focused on input)
+            if (e.key === '?' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) {
+                e.preventDefault();
+                toggleShortcutHelp();
+                return;
+            }
+        });
+
+        /* ─── Search Input — unified scan + search + navigation ──── */
+        document.getElementById('searchInput').addEventListener('keydown', function (e) {
+            // ArrowDown — move selection down the product list
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const rows = document.querySelectorAll('.product-row:not(.disabled)');
+                if (rows.length === 0) return;
+                const cur = document.querySelector('.product-row.selected');
+                const next = cur ? (cur.nextElementSibling || rows[0]) : rows[0];
+                if (cur) cur.classList.remove('selected');
+                next.classList.add('selected');
+                next.scrollIntoView({ block: 'nearest' });
+                return;
+            }
+
+            // ArrowUp — move selection up the product list
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const rows = document.querySelectorAll('.product-row:not(.disabled)');
+                if (rows.length === 0) return;
+                const cur = document.querySelector('.product-row.selected');
+                const prev = cur ? (cur.previousElementSibling || rows[rows.length - 1]) : rows[rows.length - 1];
+                if (cur) cur.classList.remove('selected');
+                prev.classList.add('selected');
+                prev.scrollIntoView({ block: 'nearest' });
+                return;
+            }
+
+            // Enter — activate selected row, scan barcode, or add selected product
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const code = this.value.trim();
+
+                // Priority 1: If a row is highlighted by arrow key, add that product
+                const selectedRow = document.querySelector('.product-row.selected');
+                if (selectedRow) {
+                    const pid = parseInt(selectedRow.dataset.id);
+                    if (pid) {
+                        document.querySelectorAll('.product-row').forEach(r => r.classList.remove('selected'));
+                        quickAddProduct(pid);
+                    }
+                    return;
+                }
+
+                // Priority 2: Exact barcode match
+                if (code) {
+                    const exactBarcode = allProducts.find(p => p.barcode === code);
+                    if (exactBarcode) {
+                        scanBarcode(code);
+                        return;
+                    }
+
+                    // Single result in filtered list — add it
+                    const filtered = allProducts.filter(p =>
+                        p.name.toLowerCase().includes(code.toLowerCase()) ||
+                        (p.barcode || '').toLowerCase().includes(code.toLowerCase())
+                    );
+                    if (filtered.length === 1 && filtered[0].stock_quantity > 0) {
+                        document.getElementById('productSelect').value = filtered[0].id;
+                        addToCartByProduct(filtered[0]);
+                        this.value = '';
+                        filterProducts();
+                        return;
+                    }
+
+                    // Fallback: server barcode lookup
+                    scanBarcode(code);
+                    return;
+                }
+
+                // Empty input + Enter: add whatever is selected in hidden productSelect
+                addToCart();
+            }
+        });
+
+        /* ─── Quick Add Customer ─────────────────────────────────── */
+        async function saveQuickCustomer() {
+            const name = document.getElementById('qc_name').value.trim();
+            const phone = document.getElementById('qc_phone').value.trim();
+            if (!name) return showToast('Customer name is required', 'error');
+
+            const res = await fetch('/api/v1/add-customer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone }),
+            });
+
+            if (res.ok) {
+                closeModal('quickCustomerModal');
+                document.getElementById('qc_name').value = '';
+                document.getElementById('qc_phone').value = '';
+                await loadCustomers();
+                const newCust = customers.find(c => c.name === name);
+                if (newCust) {
+                    document.getElementById('customerSelect').value = newCust.id;
+                    onCustomerChange();
+                }
+                showToast(`Customer "${name}" added!`, 'success');
+            } else {
+                const err = await res.json();
+                showToast(err.message || err.error || 'Failed to add customer', 'error');
+            }
+        }
+
+        /* ─── Cart Restore ───────────────────────────────────────── */
+        async function validateAndRestoreCart() {
+            let saved;
+            try {
+                const raw = localStorage.getItem('pos_cart_backup');
+                if (!raw) return;
+                saved = JSON.parse(raw);
+                if (!Array.isArray(saved) || saved.length === 0) return;
+            } catch (e) {
+                localStorage.removeItem('pos_cart_backup');
+                return;
+            }
+
+            // Wait until allProducts is populated
+            if (!allProducts.length) return;
+
+            const restored = [];
+            const skipped = [];
+
+            for (const item of saved) {
+                const live = allProducts.find(p => p.id === item.product_id);
+                if (!live) {
+                    skipped.push(item.name || `Product #${item.product_id}`);
+                    continue;
+                }
+                if (live.stock_quantity <= 0) {
+                    skipped.push(`${live.name} (out of stock)`);
+                    continue;
+                }
+                // Cap quantity to available stock
+                const safeQty = Math.min(item.quantity, live.stock_quantity);
+                restored.push({
+                    ...item,
+                    quantity: safeQty,
+                    price: item.price_overridden ? item.price : live.selling_price
+                });
+            }
+
+            if (restored.length > 0) {
+                cart = restored;
+                renderCart();
+                showToast(`🛒 Cart restored (${restored.length} item${restored.length > 1 ? 's' : ''})`, 'info');
+            }
+
+            if (skipped.length > 0) {
+                showToast(`⚠️ Removed from cart: ${skipped.join(', ')}`, 'error');
+            }
+
+            if (restored.length === 0) {
+                localStorage.removeItem('pos_cart_backup');
+            }
+        }
+
+        /* ─── Sale Return (Quick Return from POS) ───────────────── */
+        let _returnInvoiceId = null; 
+
+        function openReturnFromInvoice() {
+            closeModal('invoiceModal');
+            document.getElementById('returnInvoiceSearch').value = _lastInvoiceNumber || '';
+            document.getElementById('returnItemsArea').style.display = 'none';
+            document.getElementById('returnLoadingMsg').style.display = 'none';
+            document.getElementById('submitReturnBtn').style.display = 'none';
+            document.getElementById('returnSubtitle').textContent = 'Search for an invoice to return';
+            openModal('saleReturnModal');
+            if (_lastInvoiceNumber) {
+                setTimeout(loadReturnInvoice, 300);
+            }
+        }
+
+        async function loadReturnInvoice() {
+            const searchBox = document.getElementById('returnInvoiceSearch');
+            const searchVal = searchBox.value.trim();
+            if(!searchVal) return showToast('Enter invoice number', 'error');
+
+            document.getElementById('returnItemsArea').style.display = 'none';
+            document.getElementById('submitReturnBtn').style.display = 'none';
+            document.getElementById('returnLoadingMsg').style.display = 'block';
+            document.getElementById('returnSubtitle').textContent = `Looking up ${searchVal}...`;
+
+            try {
+                // Direct invoice lookup (FIX 7)
+                const res2 = await fetch(`/api/v1/sale-by-invoice/${encodeURIComponent(searchVal.toUpperCase())}`);
+                const data2 = await res2.json();
+                if (!res2.ok) {
+                    document.getElementById('returnLoadingMsg').style.display = 'none';
+                    document.getElementById('returnSubtitle').textContent = '❌ Invoice not found';
+                    return;
+                }
+
+                const sale = data2.data;
+                _returnInvoiceId = sale.id;
+                document.getElementById('returnLoadingMsg').style.display = 'none';
+                document.getElementById('returnSubtitle').textContent = `Return for ${sale.invoice_number} (Total: ₹${sale.final_amount})`;
+                
+                window._returnItemsData = sale.items.map(i => ({
+                    sale_item_id: i.id,
+                    product_id: i.product_id,
+                    name: i.name,
+                    price: i.price,
+                    discount: i.discount || 0,
+                    sold_qty: i.quantity,
+                    returned_qty: i.returned_quantity || 0,
+                    return_qty_input: 0 // user input
+                })).filter(i => i.sold_qty > i.returned_qty); // Only show items that can still be returned
+
+                if(window._returnItemsData.length === 0) {
+                    document.getElementById('returnSubtitle').textContent = `⚠️ All items in ${sale.invoice_number} are already returned.`;
+                    return;
+                }
+
+                renderReturnItems();
+                document.getElementById('returnItemsArea').style.display = 'block';
+                document.getElementById('submitReturnBtn').style.display = 'inline-block';
+                document.getElementById('returnRefundCash').value = 0;
+                document.getElementById('returnRefundUpi').value = 0;
+                document.getElementById('returnReason').value = '';
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('returnLoadingMsg').style.display = 'none';
+                document.getElementById('returnSubtitle').textContent = '❌ Error loading invoice';
+            }
+        }
+
+        function renderReturnItems() {
+            const body = document.getElementById('returnItemsBody');
+            let totalReturnVal = 0;
+
+            body.innerHTML = window._returnItemsData.map((item, idx) => {
+                const maxReturn = item.sold_qty - item.returned_qty;
+                const raw = item.price * item.return_qty_input;
+                const discObj = raw * (item.discount / 100);
+                const lineTotal = raw - discObj;
+                totalReturnVal += lineTotal;
+
+                return `
+                <tr>
+                    <td class="td-primary">${item.name}</td>
+                    <td>${item.sold_qty} (Rtn: ${item.returned_qty})</td>
+                    <td>
+                        <input type="number" min="0" max="${maxReturn}" value="${item.return_qty_input}"
+                            style="width:60px;padding:4px;"
+                            onchange="updateReturnQty(${idx}, this.value, ${maxReturn})">
+                        <span style="font-size:11px;color:var(--text-muted)">/ ${maxReturn}</span>
+                    </td>
+                    <td>₹${item.price}</td>
+                    <td>${item.discount}%</td>
+                    <td class="td-amount">₹${lineTotal.toFixed(2)}</td>
+                </tr>`;
+            }).join('');
+
+            document.getElementById('returnTotal').textContent = totalReturnVal.toFixed(2);
+            // Suggest refund amount automatically
+            document.getElementById('returnRefundCash').value = totalReturnVal > 0 ? totalReturnVal.toFixed(2) : 0;
+            document.getElementById('returnRefundUpi').value = 0;
+        }
+
+        function updateReturnQty(idx, val, max) {
+            let q = parseInt(val) || 0;
+            if(q < 0) q = 0;
+            if(q > max) q = max;
+            window._returnItemsData[idx].return_qty_input = q;
+            renderReturnItems();
+        }
+
+        async function submitSaleReturn() {
+            const itemsToReturn = window._returnItemsData
+                .filter(i => i.return_qty_input > 0)
+                .map(i => ({
+                    sale_item_id: i.sale_item_id || null,
+                    product_id: i.product_id,
+                    quantity: i.return_qty_input,
+                    price: i.price,
+                    discount: i.discount || 0
+                }));
+
+            if(itemsToReturn.length === 0) return showToast('Please select at least 1 item to return', 'error');
+
+            const refundCash = parseFloat(document.getElementById('returnRefundCash').value) || 0;
+            const refundUpi = parseFloat(document.getElementById('returnRefundUpi').value) || 0;
+            const reason = document.getElementById('returnReason').value.trim();
+
+            if (reason.length > 0 && reason.length < 3) {
+                return showToast('Return reason must be at least 3 characters', 'error');
+            }
+
+            const btn = document.getElementById('submitReturnBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Submitting...';
+
+            try {
+                const res = await fetch('/api/v1/sale-return', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sale_id: _returnInvoiceId,
+                        items: itemsToReturn,
+                        refund_cash: refundCash,
+                        refund_upi: refundUpi,
+                        reason: reason || 'Customer Return'
+                    })
+                });
+
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.message || data.error || 'Failed to process return');
+
+                showToast('✅ Return processed successfully!', 'success');
+                closeModal('saleReturnModal');
+                
+                // Refresh stock info if we are still on billing page
+                loadProducts();
+
+            } catch (err) {
+                console.error(err);
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '↩ Submit Return';
+            }
+        }
+
+        /* ─── Void Current Sale ───────────────────────────────────── */
+        async function voidCurrentSale() {
+            const btn = document.getElementById('voidSaleBtn');
+            const saleId = btn?.dataset.saleId;
+            if (!saleId) return showToast('Sale ID not found', 'error');
+
+            if (!(await kiranaConfirm('Void Invoice', `This will cancel invoice ${_lastInvoiceNumber} and restore all stock. This cannot be undone. Proceed?`))) return;
+
+            // Require manager PIN
+            openManagerPinModal(async (approved) => {
+                if (!approved) return;
+
+                const token = window._managerOverrideToken;
+                if (!token) return showToast('Manager token missing. Please try again.', 'error');
+
+                try {
+                    const res = await fetch(`/api/v1/void-sale/${saleId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ manager_override_token: token })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Void failed');
+
+                    window._managerOverrideToken = null;
+                    closeModal('invoiceModal');
+                    // Refresh products to reflect restored stock
+                    await loadProducts();
+                    showToast(`🗑 Invoice ${_lastInvoiceNumber} voided. Stock restored.`, 'success');
+                } catch(e) {
+                    showToast(e.message, 'error');
+                }
+            });
+        }
+
+        /* ─── Udhaar / Receive Payment ────────────────────────────── */
+        let _receivePaymentCustomerId = null;
+
+        function openReceivePayment() {
+            const id = document.getElementById('customerSelect').value;
+            if (!id) return showToast('Please select a customer first', 'error');
+            const c = customers.find(c => c.id == id);
+            if (!c) return;
+            _receivePaymentCustomerId = id;
+            document.getElementById('receivePaymentSubtitle').textContent = c.name;
+            document.getElementById('receivePaymentOutstanding').textContent = (c.credit_balance || 0).toFixed(2);
+            document.getElementById('receivePaymentAmount').value = '';
+            document.getElementById('receivePaymentMode').value = 'cash';
+            document.getElementById('receivePaymentNote').value = '';
+            openModal('receivePaymentModal');
+            setTimeout(() => document.getElementById('receivePaymentAmount').focus(), 100);
+        }
+
+        async function submitUdhaarPayment() {
+            const amount = parseFloat(document.getElementById('receivePaymentAmount').value);
+            if (!amount || amount <= 0) return showToast('Enter a valid amount', 'error');
+
+            const mode = document.getElementById('receivePaymentMode').value;
+            const note = document.getElementById('receivePaymentNote').value.trim();
+
+            try {
+                const res = await fetch(`/api/v1/customers/${_receivePaymentCustomerId}/receive-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount, payment_mode: mode, note: note || undefined })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Failed to record payment');
+
+                closeModal('receivePaymentModal');
+                showToast(`✅ Payment of ₹${amount.toFixed(2)} recorded. New balance: ₹${Number(data.data.new_balance).toFixed(2)}`, 'success');
+
+                // Reload customers to refresh credit balance display
+                await loadCustomers();
+                // Re-trigger customer change to update the credit bar
+                onCustomerChange();
+            } catch(e) {
+                showToast(e.message, 'error');
+            }
+        }
+
+        /* ─── Loyalty Points Redemption ────────────────────────────── */
+        let _redeemCustomerId = null;
+
+        async function openRedeemPoints() {
+            const id = document.getElementById('customerSelect').value;
+            if (!id) return showToast('Please select a customer first', 'error');
+            const c = customers.find(c => c.id == id);
+            if (!c) return showToast('Customer not found', 'error');
+            _redeemCustomerId = id;
+
+            // Fetch current settings to get loyalty_redeem_rate
+            let settings = currentSettings;
+            if (!settings && window.ReceiptEngine) {
+                settings = await ReceiptEngine.getInvoiceSettings();
+            }
+            window._loyaltyRedeemRate = Number(settings?.loyalty_redeem_rate) || 1;
+
+            document.getElementById('redeemCustomerName').textContent = c.name;
+            document.getElementById('redeemAvailablePoints').textContent = c.loyalty_points || 0;
+            const input = document.getElementById('redeemPointsInput');
+            input.value = 0;
+            input.max = c.loyalty_points || 0;
+            document.getElementById('redeemDiscountPreview').textContent = '= ₹0.00 off';
+
+            input.oninput = function () {
+                const pts = parseInt(this.value) || 0;
+                const discount = (pts * window._loyaltyRedeemRate).toFixed(2);
+                document.getElementById('redeemDiscountPreview').textContent = `= ₹${discount} off`;
+            };
+
+            openModal('redeemPointsModal');
+            setTimeout(() => input.focus(), 100);
+        }
+
+        async function confirmRedeemPoints() {
+            const points = parseInt(document.getElementById('redeemPointsInput').value);
+            if (!points || points <= 0) return showToast('Enter a valid number of points', 'error');
+
+            try {
+                const res = await fetch(`/api/v1/customers/${_redeemCustomerId}/redeem-points`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ points })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.message || json.error || 'Redemption failed');
+
+                const data = json.data;
+                window._loyaltyDiscountApplied = data.discount_amount;
+
+                // Apply as flat bill discount
+                document.getElementById('billDiscount').value = data.discount_amount;
+                document.getElementById('discountType').value = 'flat';
+                renderCart();
+
+                // Update loyalty display: subtract redeemed points
+                const c = customers.find(c => c.id == _redeemCustomerId);
+                if (c) {
+                    c.loyalty_points = Math.max(0, (c.loyalty_points || 0) - points);
+                    document.getElementById('loyaltyText').textContent = `Loyalty: ${c.loyalty_points} pts`;
+                    if (c.loyalty_points <= 0) {
+                        document.getElementById('loyaltyInfo').style.display = 'none';
+                    }
+                }
+
+                closeModal('redeemPointsModal');
+                showToast(`🎁 ₹${Number(data.discount_amount).toFixed(2)} discount applied!`, 'success');
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        }
+
+        function cancelRedeemPoints() {
+            closeModal('redeemPointsModal');
+        }
+
+        /* ─── Init ───────────────────────────────────────────────── */
+        loadProducts().then(() => validateAndRestoreCart());
+        loadCustomers();
+        updateHeldBillsBadge();
+        updateOfflineBadge().catch(() => {});
+
+        // Background refresh every 3 minutes (FIX 4)
+        setInterval(() => {
+            loadProducts();
+        }, 3 * 60 * 1000);
+
+        /* ─── Offline Badge & Sync ────────────────────────────────── */
+        async function updateOfflineBadge() {
+            try {
+                const count = await OfflineQueue.count();
+                const badge = document.getElementById('offlinePendingBadge');
+                const countEl = document.getElementById('offlinePendingCount');
+                if (count > 0) {
+                    countEl.textContent = count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            } catch (e) {
+                // Silent fail if IndexedDB errors
+            }
+        }
+
+        async function syncOfflineQueue() {
+            try {
+                const items = await OfflineQueue.getAll();
+                if (!items || items.length === 0) {
+                    showToast('No offline sales pending', 'info');
+                    return;
+                }
+                showToast(`Syncing ${items.length} offline sale(s)...`, 'info');
+                let synced = 0;
+                let failed = 0;
+                for (const item of items) {
+                    try {
+                        const res = await fetch(item.payload.url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Idempotency-Key': item.payload.idempotencyKey
+                            },
+                            body: JSON.stringify(item.payload.payload)
+                        });
+                        if (res.ok) {
+                            await OfflineQueue.remove(item.id);
+                            synced++;
+                        } else {
+                            failed++;
+                        }
+                    } catch (e) {
+                        failed++;
+                    }
+                }
+                await updateOfflineBadge();
+                showToast(`Synced ${synced} sale(s). ${failed} failed.`, failed === 0 ? 'success' : 'error');
+                if (synced > 0) {
+                    loadProducts();
+                }
+            } catch (e) {
+                showToast('Failed to sync offline sales', 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>

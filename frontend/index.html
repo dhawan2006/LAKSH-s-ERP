@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">K</div>
+                    <div class="brand-text">
+                        <h2>Kirana ERP</h2>
+                        <span>Business Suite</span>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <div class="sidebar-section-label">Main Menu</div>
+                <a href="index.html" class="active"><span class="nav-icon">⊞</span> Dashboard</a>
+                <a href="billing.html"><span class="nav-icon">🧾</span> POS Billing</a>
+                <a href="products.html"><span class="nav-icon">📦</span> Products</a>
+                <a href="categories.html"><span class="nav-icon">🏷️</span> Categories</a>
+                <a href="customers.html"><span class="nav-icon">👥</span> Customers</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Purchase</div>
+                <a href="purchase-orders.html"><span class="nav-icon">📋</span> Purchase Orders</a>
+                <a href="purchases.html"><span class="nav-icon">🛒</span> Purchases</a>
+                <a href="purchase-returns.html"><span class="nav-icon">↩️</span> Purchase Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Sales</div>
+                <a href="sale-orders.html"><span class="nav-icon">📑</span> Sale Orders</a>
+                <a href="sales.html"><span class="nav-icon">📊</span> Sales History</a>
+                <a href="sale-returns.html"><span class="nav-icon">🔄</span> Sale Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Finance</div>
+                <a href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+                <a href="profit-loss.html"><span class="nav-icon">💹</span> Profit &amp; Loss</a>
+                <a href="register.html"><span class="nav-icon">🗃️</span> Register</a>
+                <a href="settings-invoice.html"><span class="nav-icon">⚙️</span> Invoice Settings</a>
+                <a href="backup.html"><span class="nav-icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="store-avatar">S</div>
+                    <div class="store-info">
+                        <h4>Store Admin</h4>
+                        <span>Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <div class="main">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h3>Dashboard</h3>
+                    <div class="breadcrumb">Welcome back — here's what's happening today</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="status-pill"><span class="status-dot online"></span><span
+                            style="color:var(--success)">Online</span></div>
+                    <div class="topbar-date" id="todayDate"></div>
+                    <div class="topbar-badge" title="Low stock alerts"
+                        onclick="document.getElementById('lowStockCard').scrollIntoView({behavior:'smooth'})">
+                        🔔
+                        <span class="badge-dot" id="alertDot" style="display:none;"></span>
+                    </div>
+                    <a href="billing.html" class="btn btn-primary btn-sm">+ New Sale</a>
+                </div>
+            </div>
+
+            <div class="content">
+
+                <!-- PRIMARY STATS -->
+                <div class="grid grid-4 mb-20">
+                    <div class="stat-card-v2 animate-in animate-delay-1">
+                        <div class="stat-header">
+                            <div class="stat-icon-badge teal">💰</div>
+                            <div class="stat-trend up" id="profitChange">— gross margin</div>
+                        </div>
+                        <div class="stat-label">Today's Revenue</div>
+                        <div class="stat-value" id="todaySales">₹0</div>
+                        <div class="stat-sub">total sales today</div>
+                    </div>
+                    <div class="stat-card-v2 animate-in animate-delay-2">
+                        <div class="stat-header">
+                            <div class="stat-icon-badge green">📈</div>
+                            <div class="stat-trend up">net earnings</div>
+                        </div>
+                        <div class="stat-label">Today's Profit</div>
+                        <div class="stat-value" id="todayProfit">₹0</div>
+                        <div class="stat-sub">after all expenses</div>
+                    </div>
+                    <div class="stat-card-v2 animate-in animate-delay-3">
+                        <div class="stat-header">
+                            <div class="stat-icon-badge orange">👥</div>
+                        </div>
+                        <div class="stat-label">Total Customers</div>
+                        <div class="stat-value" id="totalCustomers">0</div>
+                        <div class="stat-sub">registered accounts</div>
+                    </div>
+                    <div class="stat-card-v2 animate-in animate-delay-4">
+                        <div class="stat-header">
+                            <div class="stat-icon-badge red">⚠️</div>
+                            <div class="stat-trend down" id="creditCustomers">— customers</div>
+                        </div>
+                        <div class="stat-label">Pending Udhaar</div>
+                        <div class="stat-value" id="totalCredit">₹0</div>
+                        <div class="stat-sub">outstanding credit</div>
+                    </div>
+                </div>
+
+                <!-- SECONDARY STATS -->
+                <div class="grid grid-4 mb-20">
+                    <div class="stat-card-v2 animate-in animate-delay-5">
+                        <div class="stat-header">
+                            <div class="stat-icon-badge cyan">🧾</div>
+                        </div>
+                        <div class="stat-label">Today's Bills</div>
+                        <div class="stat-value" id="todayBills">0</div>
+                        <div class="stat-sub">invoices generated</div>
+                    </div>
+                    <div class="stat-card-v2 animate-in animate-delay-6">
+                        <div class="stat-header">
+                            <div class="stat-icon-badge orange">📦</div>
+                        </div>
+                        <div class="stat-label">Low Stock Items</div>
+                        <div class="stat-value" id="lowStockCount">0</div>
+                        <div class="stat-sub text-warning">need reorder</div>
+                    </div>
+                    <div class="stat-card-v2 animate-in animate-delay-7">
+                        <div class="stat-header">
+                            <div class="stat-icon-badge blue">💳</div>
+                        </div>
+                        <div class="stat-label">Today's UPI</div>
+                        <div class="stat-value" id="todayUPI">₹0</div>
+                        <div class="stat-sub">digital payments</div>
+                    </div>
+                    <div class="stat-card-v2 animate-in animate-delay-8">
+                        <div class="stat-header">
+                            <div class="stat-icon-badge green">💵</div>
+                        </div>
+                        <div class="stat-label">Today's Cash</div>
+                        <div class="stat-value" id="todayCash">₹0</div>
+                        <div class="stat-sub">cash collected</div>
+                    </div>
+                </div>
+
+                <!-- CHART + TOP PRODUCTS -->
+                <div class="grid mb-20" style="grid-template-columns:1.6fr 1fr; gap:18px;">
+
+                    <div class="glass-card" style="padding:20px 22px;">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Sales Overview — Last 7 Days</div>
+                                <div class="card-subtitle">Daily revenue trend</div>
+                            </div>
+                            <span class="badge badge-info" id="weekTotal">₹0 this week</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="salesChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="padding:20px 22px;">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Top Selling Products</div>
+                                <div class="card-subtitle">Today</div>
+                            </div>
+                        </div>
+                        <div id="topProductsList">
+                            <div class="empty-state" style="padding:24px 16px;">
+                                <span class="empty-state-icon">📊</span>
+                                <p>No sales yet today</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- PAYMENT BREAKDOWN + LOW STOCK -->
+                <div class="grid" style="grid-template-columns:1fr 1.6fr; gap:18px;" id="lowStockCard">
+
+                    <div class="glass-card" style="padding:20px 22px;">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Payment Breakdown</div>
+                                <div class="card-subtitle">Today's collection</div>
+                            </div>
+                        </div>
+                        <div class="chart-container" style="height:190px;">
+                            <canvas id="paymentChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="padding:20px 22px;">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Low Stock Alerts</div>
+                                <div class="card-subtitle">Items at or below threshold</div>
+                            </div>
+                            <a href="products.html" class="btn btn-outline btn-sm">Manage Stock</a>
+                        </div>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Stock Left</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lowStockTable">
+                                    <tr>
+                                        <td colspan="3"
+                                            style="text-align:center; color:var(--text-muted); padding:20px;">Loading...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        /* ─── Utilities ─────────────────────────────────────────── */
+        function fmt(n) { return '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
+
+        function showToast(msg, type = 'info') {
+            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.innerHTML = `<span>${icons[type]}</span><span class="toast-msg">${msg}</span>`;
+            document.getElementById('toastContainer').appendChild(el);
+            setTimeout(() => el.remove(), 3500);
+        }
+
+        /* ─── Date ───────────────────────────────────────────────── */
+        document.getElementById('todayDate').textContent =
+            new Date().toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+
+        /* ─── Dashboard Load ─────────────────────────────────────── */
+        async function loadDashboard() {
+            try {
+                const [reportRes, customersRes, lowStockRes, weekRes] = await Promise.all([
+                    fetch('/api/v1/daily-report'),
+                    fetch('/api/v1/customers?limit=200'),
+                    fetch('/api/v1/low-stock'),
+                    fetch('/api/v1/weekly-report'),
+                ]);
+
+                const [reportJson, customersJson, lowStockJson, weekJson] = await Promise.all([
+                    reportRes.json(), customersRes.json(), lowStockRes.json(), weekRes.json()
+                ]);
+
+                const report = reportJson?.data?.data || reportJson.data || {};
+                const customers = customersJson?.data?.data || customersJson.data || [];
+                const lowStock = lowStockJson?.data?.data || lowStockJson.data || [];
+                const weekData = weekJson?.data?.data || weekJson.data || [];
+
+                const pendingRes = await fetch('/api/v1/pending-credit');
+                const pendingJson = await pendingRes.json();
+                const pending = pendingJson.data || {};
+
+                // Primary stats
+                document.getElementById('todaySales').textContent = fmt(report.totalSales);
+                document.getElementById('todayProfit').textContent = fmt(report.totalProfit);
+                document.getElementById('totalCredit').textContent = fmt(pending.totalPending);
+                document.getElementById('totalCustomers').textContent = customers.length;
+                document.getElementById('todayBills').textContent = report.totalBills || 0;
+                document.getElementById('todayUPI').textContent = fmt(report.totalUPI);
+                document.getElementById('todayCash').textContent = fmt(report.totalCash);
+                document.getElementById('lowStockCount').textContent = lowStock.length;
+
+                document.getElementById('creditCustomers').textContent =
+                    (pending.customersWithBalance || 0) + ' customers with balance';
+
+                const margin = report.totalSales > 0
+                    ? ((report.totalProfit / report.totalSales) * 100).toFixed(1)
+                    : '0.0';
+                document.getElementById('profitChange').textContent = margin + '% gross margin';
+
+                if (lowStock.length > 0) document.getElementById('alertDot').style.display = 'block';
+
+                renderLowStockTable(lowStock);
+                renderTopProducts(report.products || []);
+
+                const weekTotal = weekData.reduce((s, d) => s + (d.total || 0), 0);
+                document.getElementById('weekTotal').textContent = fmt(weekTotal) + ' this week';
+
+                renderSalesChart(weekData);
+                renderPaymentChart(report);
+
+            } catch (e) {
+                showToast('Failed to load dashboard data', 'error');
+            }
+        }
+
+        function renderLowStockTable(products) {
+            const tbody = document.getElementById('lowStockTable');
+            if (!products.length) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted); padding:20px;">
+            ✅ All products have sufficient stock</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = products.map(p => {
+                const status = p.stock_quantity === 0
+                    ? `<span class="badge badge-danger">Out of Stock</span>`
+                    : `<span class="badge badge-warning">Low Stock</span>`;
+                return `<tr class="${p.stock_quantity === 0 ? 'out-stock' : 'low-stock'}">
+            <td class="td-primary">${p.name}</td>
+            <td>${p.stock_quantity} units</td>
+            <td>${status}</td>
+        </tr>`;
+            }).join('');
+        }
+
+        function renderTopProducts(products) {
+            const el = document.getElementById('topProductsList');
+            if (!products.length) return;
+            const max = products[0]?.total_quantity || 1;
+            el.innerHTML = `<div style="padding:4px 2px;">` + products.slice(0, 6).map(p => {
+                const pct = ((p.total_quantity / max) * 100).toFixed(0);
+                return `<div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                <span style="font-size:12.5px;font-weight:600;color:var(--text-primary);">${p.name}</span>
+                <span style="font-size:11.5px;color:var(--text-muted); font-weight:500;">${p.total_quantity} sold</span>
+            </div>
+            <div style="height:4px;background:var(--bg-elevated);border-radius:99px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;background:linear-gradient(to right,var(--accent),#38bdf8);border-radius:99px;transition:width 0.8s ease;"></div>
+            </div>
+        </div>`;
+            }).join('') + `</div>`;
+        }
+
+        function renderSalesChart(weekData) {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            const labels = weekData.map(d => {
+                const dt = new Date(d.date);
+                return dt.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit' });
+            });
+            const values = weekData.map(d => d.total || 0);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.length ? labels : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: values.length ? values : [0, 0, 0, 0, 0, 0, 0],
+                        borderColor: '#10d9a0',
+                        backgroundColor: (ctx) => {
+                            const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, 200);
+                            gradient.addColorStop(0, 'rgba(16,217,160,0.18)');
+                            gradient.addColorStop(1, 'rgba(16,217,160,0.01)');
+                            return gradient;
+                        },
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.45,
+                        pointBackgroundColor: '#10d9a0',
+                        pointBorderColor: '#0f1521',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#141c2e',
+                            borderColor: '#1a2540',
+                            borderWidth: 1,
+                            titleColor: '#8ba0c8',
+                            bodyColor: '#f0f4fc',
+                            padding: 10,
+                            callbacks: { label: c => ' ₹' + c.parsed.y.toLocaleString('en-IN') }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: '#1a2540' }, ticks: { color: '#4a5c80', font: { size: 11 } } },
+                        y: {
+                            grid: { color: '#1a2540' },
+                            ticks: { color: '#4a5c80', font: { size: 11 }, callback: v => '₹' + Number(v).toLocaleString('en-IN') }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderPaymentChart(report) {
+            const ctx = document.getElementById('paymentChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Cash', 'UPI', 'Udhaar'],
+                    datasets: [{
+                        data: [report.totalCash || 0, report.totalUPI || 0, report.totalCredit || 0],
+                        backgroundColor: ['#10d9a0', '#3b82f6', '#f43f5e'],
+                        borderColor: '#0f1521',
+                        borderWidth: 3,
+                        spacing: 3,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '72%',
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: '#8ba0c8', font: { size: 11.5 }, padding: 12, boxWidth: 10, borderRadius: 4 }
+                        },
+                        tooltip: {
+                            backgroundColor: '#141c2e', borderColor: '#1a2540', borderWidth: 1,
+                            callbacks: { label: c => ' ₹' + c.parsed.toLocaleString('en-IN') }
+                        }
+                    }
+                }
+            });
+        }
+
+        loadDashboard();
+    </script>
+</body>
+
+</html>

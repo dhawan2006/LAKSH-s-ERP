@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Purchase Orders</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">K</div>
+                    <div class="brand-text">
+                        <h2>Kirana ERP</h2><span>Business Suite</span>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <div class="sidebar-section-label">Main Menu</div>
+                <a href="index.html"><span class="nav-icon">⊞</span> Dashboard</a>
+                <a href="billing.html"><span class="nav-icon">🧾</span> POS Billing</a>
+                <a href="products.html"><span class="nav-icon">📦</span> Products</a>
+                <a href="categories.html"><span class="nav-icon">🏷️</span> Categories</a>
+                <a href="customers.html"><span class="nav-icon">👥</span> Customers</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Purchase</div>
+                <a href="purchase-orders.html" class="active"><span class="nav-icon">📋</span> Purchase Orders</a>
+                <a href="purchases.html"><span class="nav-icon">🛒</span> Purchases</a>
+                <a href="purchase-returns.html"><span class="nav-icon">↩️</span> Purchase Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Sales</div>
+                <a href="sale-orders.html"><span class="nav-icon">📑</span> Sale Orders</a>
+                <a href="sales.html"><span class="nav-icon">📊</span> Sales History</a>
+                <a href="sale-returns.html"><span class="nav-icon">🔄</span> Sale Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Finance</div>
+                <a href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+                <a href="profit-loss.html"><span class="nav-icon">💹</span> Profit &amp; Loss</a>
+                <a href="register.html"><span class="nav-icon">🗃️</span> Register</a>
+                <a href="settings-invoice.html"><span class="nav-icon">⚙️</span> Invoice Settings</a>
+                <a href="backup.html"><span class="nav-icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="store-avatar">S</div>
+                    <div class="store-info">
+                        <h4>Store Admin</h4><span>Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="main">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h3>Purchase Orders</h3>
+                    <div class="breadcrumb">Create and manage purchase orders for suppliers</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="status-pill"><span class="status-dot online"></span><span
+                            style="color:var(--success)">Online</span></div><button class="btn btn-primary"
+                        onclick="openAddModal()">+ New PO</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="grid grid-4 mb-20">
+                    <div class="stat-card blue"><span class="stat-icon">📋</span>
+                        <div class="stat-label">Total POs</div>
+                        <div class="stat-value" id="stat-total">0</div>
+                    </div>
+                    <div class="stat-card orange"><span class="stat-icon">⏳</span>
+                        <div class="stat-label">Pending</div>
+                        <div class="stat-value" id="stat-pending">0</div>
+                    </div>
+                    <div class="stat-card green"><span class="stat-icon">✅</span>
+                        <div class="stat-label">Received</div>
+                        <div class="stat-value" id="stat-received">0</div>
+                    </div>
+                    <div class="stat-card cyan"><span class="stat-icon">💰</span>
+                        <div class="stat-label">Total Value</div>
+                        <div class="stat-value" id="stat-value">₹0</div>
+                    </div>
+                </div>
+                <div class="glass-card" style="padding:20px 22px; margin-bottom:18px;">
+                    <div class="card-header mb-16">
+                        <div>
+                            <div class="card-title">Purchase Orders</div>
+                            <div class="card-subtitle" id="tableCount">Loading...</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>PO #</th>
+                                    <th>Supplier</th>
+                                    <th>Items</th>
+                                    <th>Value</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="poTable">
+                                <tr>
+                                    <td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted);">
+                                        Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New PO Modal -->
+    <div class="modal-overlay" id="poModal">
+        <div class="modal" style="max-width:680px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">New Purchase Order</div>
+                </div><button class="modal-close" onclick="closeModal('poModal')">✕</button>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Supplier Name</label><input type="text" id="po_supplier"
+                        placeholder="Supplier name"></div>
+                <div class="form-group"><label>Phone</label><input type="text" id="po_phone" placeholder="Optional">
+                </div>
+            </div>
+            <div id="poItemsContainer"></div>
+            <button class="btn btn-outline btn-sm" style="margin-bottom:12px;" onclick="addPoItem()">+ Add Item</button>
+            <div class="form-group"><label>Notes</label><input type="text" id="po_notes" placeholder="Optional"></div>
+            <div
+                style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:12px;font-size:13px;">
+                Order Total: <strong id="poTotal">₹0</strong>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('poModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="savePO()">💾 Create PO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receive PO Modal -->
+    <div class="modal-overlay" id="receiveModal">
+        <div class="modal" style="max-width:500px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="receiveTitle">Receive PO</div>
+                </div><button class="modal-close" onclick="closeModal('receiveModal')">✕</button>
+            </div>
+            <input type="hidden" id="receive_po_id">
+            <div id="receiveItemsList"
+                style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:12px;font-size:12.5px;max-height:200px;overflow-y:auto;">
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Cash Paid (₹)</label><input type="number" id="receive_cash"
+                        placeholder="0"></div>
+                <div class="form-group"><label>Notes</label><input type="text" id="receive_notes"
+                        placeholder="Optional"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('receiveModal')">Cancel</button>
+                <button class="btn btn-success" onclick="receivePO()">✅ Mark as Received</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script>
+        let allPOs = [], allProducts = [], poItemCount = 0;
+        function showToast(msg, type = 'info') { const el = document.createElement('div'); el.className = `toast ${type}`; el.innerHTML = `<span>${{ success: '✅', error: '❌', info: 'ℹ️' }[type]}</span><span class="toast-msg">${msg}</span>`; document.getElementById('toastContainer').appendChild(el); setTimeout(() => el.remove(), 3500); }
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        async function loadData() {
+            const [poRes, prodRes] = await Promise.all([fetch('/api/v1/purchase-orders?limit=200'), fetch('/api/v1/products?limit=200')]);
+            const poJson = await poRes.json(); const prodJson = await prodRes.json();
+            allPOs = poJson?.data?.data || poJson?.data || poJson; allProducts = prodJson?.data?.data || prodJson?.data || prodJson;
+            document.getElementById('stat-total').textContent = allPOs.length;
+            document.getElementById('stat-pending').textContent = allPOs.filter(p => p.status === 'PENDING').length;
+            document.getElementById('stat-received').textContent = allPOs.filter(p => p.status === 'RECEIVED').length;
+            const val = allPOs.reduce((s, p) => s + p.total_amount, 0);
+            document.getElementById('stat-value').textContent = '₹' + val.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            document.getElementById('tableCount').textContent = allPOs.length + ' purchase orders';
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('poTable');
+            if (!allPOs.length) { tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><span class="empty-state-icon">📋</span><h4>No purchase orders yet</h4></div></td></tr>`; return; }
+            const fmt = n => '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            tbody.innerHTML = allPOs.map(po => {
+                const badge = po.status === 'PENDING' ? 'badge-warning' : 'badge-success';
+                const actions = po.status === 'PENDING'
+                    ? `<button class="btn btn-success btn-sm" onclick="openReceive(${po.id},'${po.po_number}',${po.total_amount})">✅ Receive</button>`
+                    : `<span class="text-muted" style="font-size:12px;">Received</span>`;
+                return `<tr>
+            <td style="font-family:monospace;font-size:12px;">${po.po_number}</td>
+            <td class="td-primary">${po.supplier_name}</td>
+            <td><span class="badge badge-info">${po.item_count} items</span></td>
+            <td class="td-amount">${fmt(po.total_amount)}</td>
+            <td><span class="badge ${badge}">${po.status}</span></td>
+            <td style="font-size:11.5px;color:var(--text-muted);">${po.created_at_local ? po.created_at_local.split(' ')[0] : '—'}</td>
+            <td>${actions}</td>
+        </tr>`;
+            }).join('');
+        }
+
+        function openAddModal() {
+            poItemCount = 0; document.getElementById('poItemsContainer').innerHTML = '';
+            document.getElementById('po_supplier').value = ''; document.getElementById('po_phone').value = '';
+            document.getElementById('po_notes').value = ''; document.getElementById('poTotal').textContent = '₹0';
+            addPoItem(); openModal('poModal');
+        }
+
+        function addPoItem() {
+            const id = 'poItem_' + poItemCount++;
+            const opts = allProducts.map(p => `<option value="${p.id}" data-price="${p.cost_price}">${p.name}</option>`).join('');
+            const div = document.createElement('div'); div.id = id; div.style = 'display:grid;grid-template-columns:2fr 1fr 1fr 36px;gap:8px;margin-bottom:8px;align-items:end;';
+            div.innerHTML = `
+        <div class="form-group" style="margin:0;"><label style="font-size:11px;">Product</label><select class="po-prod" onchange="fillPoPrice(this)">${opts}</select></div>
+        <div class="form-group" style="margin:0;"><label style="font-size:11px;">Qty</label><input type="number" class="po-qty" value="1" min="1" oninput="calcPoTotal()"></div>
+        <div class="form-group" style="margin:0;"><label style="font-size:11px;">Purchase Price</label><input type="number" class="po-price" placeholder="0" oninput="calcPoTotal()"></div>
+        <button class="btn btn-danger btn-sm" style="height:36px;" onclick="document.getElementById('${id}').remove();calcPoTotal();">✕</button>`;
+            document.getElementById('poItemsContainer').appendChild(div);
+            const sel = div.querySelector('.po-prod'); const opt = sel.options[sel.selectedIndex];
+            if (opt) div.querySelector('.po-price').value = opt.dataset.price || 0;
+            calcPoTotal();
+        }
+
+        function fillPoPrice(sel) {
+            const opt = sel.options[sel.selectedIndex];
+            sel.closest('div').parentElement.querySelector('.po-price').value = opt.dataset.price || 0;
+            calcPoTotal();
+        }
+
+        function calcPoTotal() {
+            let total = 0;
+            document.querySelectorAll('#poItemsContainer > div').forEach(row => {
+                total += (parseFloat(row.querySelector('.po-qty').value) || 0) * (parseFloat(row.querySelector('.po-price').value) || 0);
+            });
+            document.getElementById('poTotal').textContent = '₹' + total.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        }
+
+        async function savePO() {
+            const items = [];
+            document.querySelectorAll('#poItemsContainer > div').forEach(row => {
+                const product_id = parseInt(row.querySelector('.po-prod').value);
+                const quantity = parseInt(row.querySelector('.po-qty').value) || 0;
+                const purchase_price = parseFloat(row.querySelector('.po-price').value) || 0;
+                if (product_id && quantity > 0) items.push({ product_id, quantity, purchase_price });
+            });
+            if (!items.length) return showToast('Add at least one item', 'error');
+            const payload = {
+                supplier_name: document.getElementById('po_supplier').value.trim() || 'Unknown',
+                supplier_phone: document.getElementById('po_phone').value.trim() || null,
+                items, notes: document.getElementById('po_notes').value.trim() || null
+            };
+            const res = await fetch('/api/v1/add-purchase-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const json = await res.json();
+            if (!res.ok) return showToast(json.message || json.error || 'Failed', 'error');
+            const data = json?.data || json;
+            showToast('PO Created: ' + data.po_number, 'success');
+            closeModal('poModal'); loadData();
+        }
+
+        async function openReceive(poId, poNum, total) {
+            document.getElementById('receive_po_id').value = poId;
+            document.getElementById('receiveTitle').textContent = 'Receive — ' + poNum;
+            document.getElementById('receive_cash').value = '';
+            document.getElementById('receive_notes').value = '';
+            const itemsRes = await fetch('/api/v1/purchase-order-items/' + poId);
+            let items = await itemsRes.json(); items = items?.data?.data || items?.data || items;
+            document.getElementById('receiveItemsList').innerHTML = `<strong>Items to receive:</strong><br><br>` + items.map(i => `• ${i.product_name} — ${i.quantity} units @ ₹${i.purchase_price}`).join('<br>') + `<br><br><strong>Total: ₹${parseFloat(total).toFixed(2)}</strong>`;
+            openModal('receiveModal');
+        }
+
+        async function receivePO() {
+            const poId = document.getElementById('receive_po_id').value;
+            const payload = { cash_paid: parseFloat(document.getElementById('receive_cash').value) || 0, notes: document.getElementById('receive_notes').value.trim() || null };
+            const res = await fetch('/api/v1/receive-purchase/' + poId, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const json = await res.json();
+            if (!res.ok) return showToast(json.message || json.error || 'Failed', 'error');
+            const data = json?.data || json;
+            showToast('Received! Purchase: ' + data.purchase_number, 'success');
+            closeModal('receiveModal'); loadData();
+        }
+        loadData();
+    </script>
+</body>
+
+</html>

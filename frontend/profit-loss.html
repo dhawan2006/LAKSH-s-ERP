@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Profit &amp; Loss</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">K</div>
+                    <div class="brand-text">
+                        <h2>Kirana ERP</h2><span>Business Suite</span>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <div class="sidebar-section-label">Main Menu</div>
+                <a href="index.html"><span class="nav-icon">⊞</span> Dashboard</a>
+                <a href="billing.html"><span class="nav-icon">🧾</span> POS Billing</a>
+                <a href="products.html"><span class="nav-icon">📦</span> Products</a>
+                <a href="categories.html"><span class="nav-icon">🏷️</span> Categories</a>
+                <a href="customers.html"><span class="nav-icon">👥</span> Customers</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Purchase</div>
+                <a href="purchase-orders.html"><span class="nav-icon">📋</span> Purchase Orders</a>
+                <a href="purchases.html"><span class="nav-icon">🛒</span> Purchases</a>
+                <a href="purchase-returns.html"><span class="nav-icon">↩️</span> Purchase Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Sales</div>
+                <a href="sale-orders.html"><span class="nav-icon">📑</span> Sale Orders</a>
+                <a href="sales.html"><span class="nav-icon">📊</span> Sales History</a>
+                <a href="sale-returns.html"><span class="nav-icon">🔄</span> Sale Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Finance</div>
+                <a href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+                <a href="profit-loss.html" class="active"><span class="nav-icon">💹</span> Profit &amp; Loss</a>
+                <a href="register.html"><span class="nav-icon">🗃️</span> Register</a>
+                <a href="settings-invoice.html"><span class="nav-icon">⚙️</span> Invoice Settings</a>
+                <a href="backup.html"><span class="nav-icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="store-avatar">S</div>
+                    <div class="store-info">
+                        <h4>Store Admin</h4><span>Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="main">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h3>Profit &amp; Loss</h3>
+                    <div class="breadcrumb">Comprehensive financial summary</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="status-pill"><span class="status-dot online"></span><span
+                            style="color:var(--success)">Online</span></div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <select id="periodSelect" class="filter-select" onchange="onPeriodChange()">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month" selected>This Month</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                        <input type="date" id="fromDate" style="display:none;" class="filter-select">
+                        <input type="date" id="toDate" style="display:none;" class="filter-select">
+                        <button class="btn btn-primary" onclick="loadPL()">📊 Load</button>
+                    </div>
+                </div>
+            </div>
+            <div class="content">
+                <!-- Summary Cards -->
+                <div class="grid grid-4 mb-20">
+                    <div class="stat-card blue"><span class="stat-icon">💰</span>
+                        <div class="stat-label">Gross Revenue</div>
+                        <div class="stat-value" id="pl-revenue">₹0</div>
+                        <div class="stat-change" id="pl-bills">0 bills</div>
+                    </div>
+                    <div class="stat-card orange"><span class="stat-icon">📦</span>
+                        <div class="stat-label">Cost of Goods</div>
+                        <div class="stat-value" id="pl-cogs">₹0</div>
+                        <div class="stat-change">goods sold</div>
+                    </div>
+                    <div class="stat-card green"><span class="stat-icon">📈</span>
+                        <div class="stat-label">Gross Profit</div>
+                        <div class="stat-value" id="pl-gross">₹0</div>
+                        <div class="stat-change" id="pl-margin">0% margin</div>
+                    </div>
+                    <div class="stat-card" id="netCard"
+                        style="background:linear-gradient(135deg,var(--card-bg),var(--bg-elevated));border:1px solid var(--border);">
+                        <span class="stat-icon">💹</span>
+                        <div class="stat-label">Net Profit</div>
+                        <div class="stat-value" id="pl-net" style="color:var(--success);">₹0</div>
+                        <div class="stat-change" id="pl-net-pct">0% net margin</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-4 mb-20">
+                    <div class="stat-card red"><span class="stat-icon">🔄</span>
+                        <div class="stat-label">Sale Returns</div>
+                        <div class="stat-value" id="pl-returns">₹0</div>
+                    </div>
+                    <div class="stat-card orange"><span class="stat-icon">🛒</span>
+                        <div class="stat-label">Total Purchases</div>
+                        <div class="stat-value" id="pl-purchases">₹0</div>
+                    </div>
+                    <div class="stat-card cyan"><span class="stat-icon">🧾</span>
+                        <div class="stat-label">GST Collected</div>
+                        <div class="stat-value" id="pl-gst">₹0</div>
+                    </div>
+                    <div class="stat-card blue"><span class="stat-icon">🏷️</span>
+                        <div class="stat-label">Discounts Given</div>
+                        <div class="stat-value" id="pl-discount">₹0</div>
+                    </div>
+                </div>
+
+                <!-- P&L Statement -->
+                <div class="card mb-20">
+                    <div class="card-header mb-16">
+                        <div>
+                            <div class="card-title">Profit &amp; Loss Statement</div>
+                            <div class="card-subtitle" id="pl-period-label">This Month</div>
+                        </div>
+                    </div>
+                    <div id="plStatement" style="font-family:monospace;font-size:13px;line-height:2;">
+                        <div style="text-align:center;color:var(--text-muted);padding:40px;">Select a period and click
+                            Load</div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="glass-card" style="padding:20px 22px; margin-bottom:18px;">
+                    <div class="card-header mb-16">
+                        <div>
+                            <div class="card-title">Revenue vs Profit</div>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="height:240px;"><canvas id="plChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="toast-container" id="toastContainer"></div>
+    <script>
+let plChartInst=null;
+function showToast(msg,type='info'){const el=document.createElement('div');el.className=`toast ${type}`;el.innerHTML=`<span>${{success:'✅',error:'❌',info:'ℹ️'}[type]}</span><span class="toast-msg">${msg}</span>`;document.getElementById('toastContainer').appendChild(el);setTimeout(()=>el.remove(),3500);}
+function fmt(n){return'₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:0});}
+
+function onPeriodChange(){
+    const p=document.getElementById('periodSelect').value;
+    document.getElementById('fromDate').style.display=p==='custom'?'':'none';
+    document.getElementById('toDate').style.display=p==='custom'?'':'none';
+}
+
+async function loadPL(){
+    const period=document.getElementById('periodSelect').value;
+    let url='/api/v1/profit-loss?';
+    if(period==='custom'){
+        const from=document.getElementById('fromDate').value;
+        const to=document.getElementById('toDate').value;
+        if(!from||!to)return showToast('Select date range','error');
+        url+=`from=${from}&to=${to}`;
+    } else {
+        url+=`period=${period}`;
+    }
+    try{
+        const res=await fetch(url); const json=await res.json();
+        if(!res.ok)return showToast(json.message||'Failed','error');
+        const data = json?.data || json;
+        document.getElementById('pl-revenue').textContent=fmt(data.gross_revenue);
+        document.getElementById('pl-cogs').textContent=fmt(data.total_cogs);
+        document.getElementById('pl-gross').textContent=fmt(data.gross_profit);
+        document.getElementById('pl-net').textContent=fmt(data.net_profit);
+        document.getElementById('pl-returns').textContent=fmt(data.total_sale_returns);
+        document.getElementById('pl-purchases').textContent=fmt(data.total_purchases);
+        document.getElementById('pl-gst').textContent=fmt(data.total_gst_collected);
+        document.getElementById('pl-discount').textContent=fmt(data.total_discounts||0);
+        document.getElementById('pl-bills').textContent=(data.total_bills||0)+' bills';
+        const gpm=data.gross_revenue>0?((data.gross_profit/data.gross_revenue)*100).toFixed(1):0;
+        document.getElementById('pl-margin').textContent=gpm+'% gross margin';
+        document.getElementById('pl-net-pct').textContent=data.profit_margin_pct+'% net margin';
+        const netEl=document.getElementById('pl-net');
+        netEl.style.color=data.net_profit>=0?'var(--success)':'var(--danger)';
+        const labels={'today':'Today','week':'This Week','month':'This Month','custom':'Custom Range'};
+        document.getElementById('pl-period-label').textContent=labels[period]||period;
+        renderPLStatement(data);
+        renderChart(data);
+    }catch(e){showToast('Failed to load','error');}
+}
+
+function renderPLStatement(d){
+    const row=(label,val,indent=0,highlight=false,negative=false)=>{
+        const color=highlight?(val>=0?'var(--success)':'var(--danger)'):'inherit';
+        const prefix=negative?'-':'';
+        return `<div style="display:flex;justify-content:space-between;padding:6px ${indent?'0':'0'} 6px ${indent?'24px':'0'};${highlight?'border-top:1px solid var(--border);border-bottom:1px solid var(--border);font-weight:700;':''}">
+            <span style="color:${highlight?'var(--text-primary)':'var(--text-secondary)'};">${label}</span>
+            <span style="color:${color};">${prefix}${fmt(val)}</span>
+        </div>`;
+    };
+    document.getElementById('plStatement').innerHTML=`
+        <div style="font-weight:700;color:var(--text-muted);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">INCOME</div>
+        ${row('Gross Revenue',d.gross_revenue)}
+        ${row('(Less) Sale Returns',d.total_sale_returns,24,false,true)}
+        ${row('Net Revenue',d.gross_revenue-d.total_sale_returns,0,true)}
+        <div style="font-weight:700;color:var(--text-muted);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:16px 0 8px;">COST OF GOODS SOLD</div>
+        ${row('Opening Stock (COGS)',d.total_cogs)}
+        ${row('Gross Profit',d.gross_profit,0,true)}
+        <div style="font-weight:700;color:var(--text-muted);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:16px 0 8px;">OTHER</div>
+        ${row('GST Collected',d.total_gst_collected)}
+        ${row('Total Purchases',d.total_purchases)}
+        <div style="margin-top:16px;padding:14px;background:${d.net_profit>=0?'rgba(16,217,160,0.08)':'rgba(244,63,94,0.08)'};border:1px solid ${d.net_profit>=0?'var(--success)':'var(--danger)'};border-radius:var(--r-sm);">
+            <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;">
+                <span>NET PROFIT</span>
+                <span style="color:${d.net_profit>=0?'var(--success)':'var(--danger)'};">${fmt(d.net_profit)}</span>
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Net Margin: ${d.profit_margin_pct}%</div>
+        </div>
+    `;
+}
+
+function renderChart(d){
+    const ctx=document.getElementById('plChart').getContext('2d');
+    if(plChartInst) plChartInst.destroy();
+    plChartInst=new Chart(ctx,{
+        type:'bar',
+        data:{
+            labels:['Gross Revenue','COGS','Gross Profit','Sale Returns','Net Profit'],
+            datasets:[{
+                label:'Amount',
+                data:[d.gross_revenue,d.total_cogs,d.gross_profit,d.total_sale_returns,d.net_profit],
+                backgroundColor:['rgba(16,217,160,0.7)','rgba(251,146,60,0.7)','rgba(16,217,160,0.7)','rgba(244,63,94,0.7)',d.net_profit>=0?'rgba(16,217,160,0.9)':'rgba(244,63,94,0.9)'],
+                borderColor:['#10d9a0','#fb923c','#10d9a0','#f43f5e',d.net_profit>=0?'#10d9a0':'#f43f5e'],
+                borderWidth:1.5,borderRadius:4
+            }]
+        },
+        options:{
+            responsive:true,maintainAspectRatio:false,
+            plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' ₹'+c.parsed.y.toLocaleString('en-IN')}}},
+            scales:{
+                x:{grid:{color:'#1a2540'},ticks:{color:'#4a5c80',font:{size:11}}},
+                y:{grid:{color:'#1a2540'},ticks:{color:'#4a5c80',callback:v=>'₹'+Number(v).toLocaleString('en-IN')}}
+            }
+        }
+    });
+}
+loadPL();
+    </script>
+</body>
+
+</html>

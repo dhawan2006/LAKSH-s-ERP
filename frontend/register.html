@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Register</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">K</div>
+                    <div class="brand-text">
+                        <h2>Kirana ERP</h2><span>Business Suite</span>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <div class="sidebar-section-label">Main Menu</div>
+                <a href="index.html"><span class="nav-icon">⊞</span> Dashboard</a>
+                <a href="billing.html"><span class="nav-icon">🧾</span> POS Billing</a>
+                <a href="products.html"><span class="nav-icon">📦</span> Products</a>
+                <a href="categories.html"><span class="nav-icon">🏷️</span> Categories</a>
+                <a href="customers.html"><span class="nav-icon">👥</span> Customers</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Purchase</div>
+                <a href="purchase-orders.html"><span class="nav-icon">📋</span> Purchase Orders</a>
+                <a href="purchases.html"><span class="nav-icon">🛒</span> Purchases</a>
+                <a href="purchase-returns.html"><span class="nav-icon">↩️</span> Purchase Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Sales</div>
+                <a href="sale-orders.html"><span class="nav-icon">📑</span> Sale Orders</a>
+                <a href="sales.html"><span class="nav-icon">📊</span> Sales History</a>
+                <a href="sale-returns.html"><span class="nav-icon">🔄</span> Sale Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Finance</div>
+                <a href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+                <a href="profit-loss.html"><span class="nav-icon">💹</span> Profit &amp; Loss</a>
+                <a href="register.html" class="active"><span class="nav-icon">🗃️</span> Register</a>
+                <a href="backup.html"><span class="nav-icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="store-avatar">S</div>
+                    <div class="store-info">
+                        <h4>Store Admin</h4><span>Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="main">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h3>Cash Register</h3>
+                    <div class="breadcrumb">Manage daily cash drawer sessions</div>
+                </div>
+                <div class="topbar-right" id="registerActions"></div>
+            </div>
+            <div class="content">
+                <!-- Register Status -->
+                <div id="registerStatus" class="card mb-20">
+                    <div style="text-align:center;padding:40px;color:var(--text-muted);">Loading register status...
+                    </div>
+                </div>
+
+                <!-- Session History -->
+                <div class="glass-card" style="padding:20px 22px; margin-bottom:18px;">
+                    <div class="card-header mb-16">
+                        <div>
+                            <div class="card-title">Session History</div>
+                            <div class="card-subtitle">Past register sessions</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Session</th>
+                                    <th>Operator</th>
+                                    <th>Opening Cash</th>
+                                    <th>Cash Sales</th>
+                                    <th>Expected</th>
+                                    <th>Closing Cash</th>
+                                    <th>Difference</th>
+                                    <th>Opened</th>
+                                    <th>Closed</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTable">
+                                <tr>
+                                    <td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted);">
+                                        Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Open Register Modal -->
+    <div class="modal-overlay" id="openModal">
+        <div class="modal" style="max-width:420px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">Open Register</div>
+                    <div class="modal-subtitle">Start a new cash session</div>
+                </div><button class="modal-close" onclick="closeModal('openModal')">✕</button>
+            </div>
+            <div class="form-group"><label>Operator Name</label><input type="text" id="open_operator"
+                    value="Store Admin"></div>
+            <div class="form-group"><label>Opening Cash (₹)</label><input type="number" id="open_cash"
+                    placeholder="Enter cash in drawer" autofocus></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('openModal')">Cancel</button>
+                <button class="btn btn-success" onclick="openRegister()">✅ Open Register</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Close Register Modal -->
+    <div class="modal-overlay" id="closeRegModal">
+        <div class="modal" style="max-width:420px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">Close Register</div>
+                </div><button class="modal-close" onclick="closeModal('closeRegModal')">✕</button>
+            </div>
+            <div id="closeSummary"
+                style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;margin-bottom:14px;font-size:13px;line-height:1.8;">
+            </div>
+            <div class="form-group"><label>Physical Cash Count (₹)</label><input type="number" id="close_cash"
+                    placeholder="Count the cash in drawer" oninput="updateDiff()"></div>
+            <div id="diffDisplay"
+                style="padding:10px;border-radius:var(--r-sm);margin-bottom:12px;font-size:13px;font-weight:600;display:none;">
+            </div>
+            <div class="form-group"><label>Notes (optional)</label><input type="text" id="close_notes"
+                    placeholder="Any notes for this session"></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('closeRegModal')">Cancel</button>
+                <button class="btn btn-danger" onclick="closeRegister()">🔒 Close Register</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script>
+        let currentRegister = null, expectedCash = 0;
+        function showToast(msg, type = 'info') { const el = document.createElement('div'); el.className = `toast ${type}`; el.innerHTML = `<span>${{ success: '✅', error: '❌', info: 'ℹ️' }[type]}</span><span class="toast-msg">${msg}</span>`; document.getElementById('toastContainer').appendChild(el); setTimeout(() => el.remove(), 3500); }
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+        function fmt(n) { return '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 }); }
+
+        async function loadStatus() {
+            const [statusRes, histRes] = await Promise.all([fetch('/api/v1/register-status'), fetch('/api/v1/register-history')]);
+            currentRegister = await statusRes.json();
+            let history = await histRes.json(); history = history?.data?.data || history?.data || history;
+            renderStatus(currentRegister);
+            renderHistory(history);
+        }
+
+        function renderStatus(reg) {
+            const statusDiv = document.getElementById('registerStatus');
+            const actionsDiv = document.getElementById('registerActions');
+            if (!reg) {
+                statusDiv.innerHTML = `
+            <div style="text-align:center;padding:48px 24px;">
+                <div style="font-size:48px;margin-bottom:16px;">🔒</div>
+                <h3 style="color:var(--text-primary);margin-bottom:8px;">Register is Closed</h3>
+                <p style="color:var(--text-muted);margin-bottom:24px;">Open a register session to start accepting sales</p>
+            </div>`;
+                actionsDiv.innerHTML = `<button class="btn btn-success" onclick="openModal('openModal')">🔓 Open Register</button>`;
+            } else {
+                expectedCash = reg.opening_cash + (reg.cash_sales || 0);
+                statusDiv.innerHTML = `
+            <div class="card-header mb-16">
+                <div><div class="card-title">🟢 Register OPEN</div><div class="card-subtitle">Opened by ${reg.operator_name} at ${reg.opened_at_local}</div></div>
+                <span class="badge badge-success" style="font-size:13px;padding:6px 12px;">ACTIVE</span>
+            </div>
+            <div class="grid grid-4">
+                <div class="stat-card green"><span class="stat-icon">💵</span><div class="stat-label">Opening Cash</div><div class="stat-value" style="font-size:20px;">${fmt(reg.opening_cash)}</div></div>
+                <div class="stat-card blue"><span class="stat-icon">🧾</span><div class="stat-label">Bills Today</div><div class="stat-value" style="font-size:20px;">${reg.bill_count || 0}</div></div>
+                <div class="stat-card cyan"><span class="stat-icon">💰</span><div class="stat-label">Cash Sales</div><div class="stat-value" style="font-size:20px;">${fmt(reg.cash_sales)}</div></div>
+                <div class="stat-card orange"><span class="stat-icon">📱</span><div class="stat-label">UPI Sales</div><div class="stat-value" style="font-size:20px;">${fmt(reg.upi_sales)}</div></div>
+            </div>
+            <div style="margin-top:16px;padding:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;">
+                Expected Cash in Drawer: <strong style="color:var(--success);">${fmt(expectedCash)}</strong>
+                (Opening ${fmt(reg.opening_cash)} + Cash Sales ${fmt(reg.cash_sales)})
+            </div>`;
+                actionsDiv.innerHTML = `<button class="btn btn-danger" onclick="openCloseModal()">🔒 Close Register</button>`;
+            }
+        }
+
+        function renderHistory(sessions) {
+            const tbody = document.getElementById('historyTable');
+            if (!sessions.length) { tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><span class="empty-state-icon">🗃️</span><h4>No sessions yet</h4></div></td></tr>`; return; }
+            const fmt2 = n => '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            tbody.innerHTML = sessions.map((s, i) => {
+                const diff = s.difference || 0;
+                const diffColor = diff > 0 ? 'text-success' : diff < 0 ? 'text-danger' : 'text-muted';
+                const badge = s.status === 'OPEN' ? '<span class="badge badge-success">OPEN</span>' : '<span class="badge badge-muted">CLOSED</span>';
+                return `<tr>
+            <td>${badge} #${s.id}</td>
+            <td>${s.operator_name}</td>
+            <td>${fmt2(s.opening_cash)}</td>
+            <td>${s.status === 'CLOSED' ? fmt2(s.closing_cash - s.opening_cash) : '—'}</td>
+            <td>${s.status === 'CLOSED' ? fmt2(s.expected_cash) : '—'}</td>
+            <td>${s.status === 'CLOSED' ? fmt2(s.closing_cash) : '—'}</td>
+            <td class="${diffColor}">${s.status === 'CLOSED' ? (diff >= 0 ? '+' : '') + fmt2(diff) : '—'}</td>
+            <td style="font-size:11.5px;color:var(--text-muted);">${s.opened_at_local ? s.opened_at_local.split(' ')[0] : '—'}</td>
+            <td style="font-size:11.5px;color:var(--text-muted);">${s.closed_at_local ? s.closed_at_local.split(' ')[0] : '—'}</td>
+        </tr>`;
+            }).join('');
+        }
+
+        async function openRegister() {
+            const operator = document.getElementById('open_operator').value.trim() || 'Store Admin';
+            const cash = parseFloat(document.getElementById('open_cash').value) || 0;
+            const res = await fetch('/api/v1/open-register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ opening_cash: cash, operator_name: operator }) });
+            const data = await res.json();
+            if (!res.ok) return showToast(data.error || 'Failed', 'error');
+            showToast('Register opened!', 'success'); closeModal('openModal'); loadStatus();
+        }
+
+        function openCloseModal() {
+            document.getElementById('close_cash').value = ''; document.getElementById('close_notes').value = '';
+            document.getElementById('diffDisplay').style.display = 'none';
+            if (currentRegister) {
+                document.getElementById('closeSummary').innerHTML = `
+            <strong>Session Summary</strong><br>
+            Opening Cash: ${fmt(currentRegister.opening_cash)}<br>
+            Cash Sales: ${fmt(currentRegister.cash_sales)}<br>
+            <strong>Expected in Drawer: ${fmt(expectedCash)}</strong>`;
+            }
+            openModal('closeRegModal');
+        }
+
+        function updateDiff() {
+            const closing = parseFloat(document.getElementById('close_cash').value) || 0;
+            const diff = closing - expectedCash;
+            const el = document.getElementById('diffDisplay');
+            el.style.display = 'block';
+            el.style.background = diff >= 0 ? 'rgba(16,217,160,0.1)' : 'rgba(244,63,94,0.1)';
+            el.style.border = `1px solid ${diff >= 0 ? 'var(--success)' : 'var(--danger)'}`;
+            el.style.color = diff >= 0 ? 'var(--success)' : 'var(--danger)';
+            el.textContent = `Difference: ${diff >= 0 ? '+' : ''}${fmt(diff)} (${diff >= 0 ? 'Surplus' : 'Shortage'})`;
+        }
+
+        async function closeRegister() {
+            const closing_cash = parseFloat(document.getElementById('close_cash').value) || 0;
+            const notes = document.getElementById('close_notes').value.trim() || null;
+            const res = await fetch('/api/v1/close-register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ closing_cash, notes }) });
+            const data = await res.json();
+            if (!res.ok) return showToast(data.error || 'Failed', 'error');
+            showToast('Register closed!', 'success'); closeModal('closeRegModal'); loadStatus();
+        }
+        loadStatus();
+    </script>
+</body>
+
+</html>

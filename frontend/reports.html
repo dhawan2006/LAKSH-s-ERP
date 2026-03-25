@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Reports</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+    <div class="app">
+
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">K</div>
+                    <div class="brand-text">
+                        <h2>Kirana ERP</h2><span>Business Suite</span>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <div class="sidebar-section-label">Main Menu</div>
+                <a href="index.html"><span class="nav-icon">⊞</span> Dashboard</a>
+                <a href="billing.html"><span class="nav-icon">🧾</span> POS Billing</a>
+                <a href="products.html"><span class="nav-icon">📦</span> Products</a>
+                <a href="categories.html"><span class="nav-icon">🏷️</span> Categories</a>
+                <a href="customers.html"><span class="nav-icon">👥</span> Customers</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Purchase</div>
+                <a href="purchase-orders.html"><span class="nav-icon">📋</span> Purchase Orders</a>
+                <a href="purchases.html"><span class="nav-icon">🛒</span> Purchases</a>
+                <a href="purchase-returns.html"><span class="nav-icon">↩️</span> Purchase Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Sales</div>
+                <a href="sale-orders.html"><span class="nav-icon">📑</span> Sale Orders</a>
+                <a href="sales.html"><span class="nav-icon">📊</span> Sales History</a>
+                <a href="sale-returns.html"><span class="nav-icon">🔄</span> Sale Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Finance</div>
+                <a href="reports.html" class="active"><span class="nav-icon">📈</span> Reports</a>
+                <a href="profit-loss.html"><span class="nav-icon">💹</span> Profit &amp; Loss</a>
+                <a href="register.html"><span class="nav-icon">🗃️</span> Register</a>
+                <a href="settings-invoice.html"><span class="nav-icon">⚙️</span> Invoice Settings</a>
+                <a href="backup.html"><span class="nav-icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="store-avatar">S</div>
+                    <div class="store-info">
+                        <h4>Store Admin</h4><span>Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="main">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h3>Business Reports</h3>
+                    <div class="breadcrumb" id="periodLabel">Analytics & performance insights</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="status-pill"><span class="status-dot online"></span><span
+                            style="color:var(--success)">Online</span></div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn btn-ghost btn-sm" id="btn-today" onclick="setRange('today')">Today</button>
+                        <button class="btn btn-ghost btn-sm" id="btn-week" onclick="setRange('week')">This Week</button>
+                        <button class="btn btn-primary btn-sm" id="btn-month" onclick="setRange('month')">This
+                            Month</button>
+                        <button class="btn btn-ghost btn-sm" id="btn-custom"
+                            onclick="setRange('custom')">Custom</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content">
+
+                <!-- CUSTOM DATE RANGE -->
+                <div id="customRange" style="display:none; margin-bottom:16px;">
+                    <div class="glass-card" style="padding:20px 22px; margin-bottom:18px;" style="padding:16px;">
+                        <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+                            <div>
+                                <label>From Date</label>
+                                <input type="date" id="customFrom" style="width:160px;">
+                            </div>
+                            <div>
+                                <label>To Date</label>
+                                <input type="date" id="customTo" style="width:160px;">
+                            </div>
+                            <button class="btn btn-primary btn-sm" style="align-self:flex-end;"
+                                onclick="loadReport()">Apply Range</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KEY METRICS -->
+                <div class="grid grid-4 mb-20">
+                    <div class="stat-card blue">
+                        <span class="stat-icon">💰</span>
+                        <div class="stat-label">Total Revenue</div>
+                        <div class="stat-value" id="r-sales">₹0</div>
+                        <div class="stat-change" id="r-bills">0 bills</div>
+                    </div>
+                    <div class="stat-card green">
+                        <span class="stat-icon">📈</span>
+                        <div class="stat-label">Gross Profit</div>
+                        <div class="stat-value" id="r-profit">₹0</div>
+                        <div class="stat-change" id="r-margin">0% margin</div>
+                    </div>
+                    <div class="stat-card orange">
+                        <span class="stat-icon">⚠️</span>
+                        <div class="stat-label">Credit Given</div>
+                        <div class="stat-value" id="r-credit">₹0</div>
+                        <div class="stat-change">udhaar / pending</div>
+                    </div>
+                    <div class="stat-card cyan">
+                        <span class="stat-icon">🧮</span>
+                        <div class="stat-label">Avg Bill Value</div>
+                        <div class="stat-value" id="r-avg">₹0</div>
+                        <div class="stat-change">per transaction</div>
+                    </div>
+                </div>
+
+                <!-- REVENUE TREND + PAYMENT MIX -->
+                <div class="grid mb-20" style="grid-template-columns:1.6fr 1fr; gap:18px;">
+                    <div class="glass-card" style="padding:20px 22px;">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Revenue Trend</div>
+                                <div class="card-subtitle" id="chartPeriodLabel">Daily breakdown</div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card" style="padding:20px 22px;">
+                        <div class="card-header">
+                            <div class="card-title">Payment Mix</div>
+                            <div class="card-subtitle">Cash vs UPI vs Udhaar</div>
+                        </div>
+                        <div class="chart-container" style="height:200px;">
+                            <canvas id="paymentMixChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TOP PRODUCTS + GST SUMMARY -->
+                <div class="grid mb-20" style="grid-template-columns:1fr 1fr; gap:18px;">
+                    <div class="glass-card" style="padding:20px 22px;">
+                        <div class="card-header mb-16">
+                            <div>
+                                <div class="card-title">Top Selling Products</div>
+                                <div class="card-subtitle">By quantity sold</div>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Product</th>
+                                        <th>Qty Sold</th>
+                                        <th>Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topProductsTable">
+                                    <tr>
+                                        <td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">
+                                            No data</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="padding:20px 22px;">
+                        <div class="card-header mb-16">
+                            <div>
+                                <div class="card-title">GST Summary</div>
+                                <div class="card-subtitle">Tax collected by slab</div>
+                            </div>
+                        </div>
+                        <div id="gstSummary">
+                            <div class="empty-state" style="padding:28px;">
+                                <span class="empty-state-icon">🧾</span>
+                                <p>No GST data available</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAYMENT BREAKDOWN -->
+                <div class="glass-card" style="padding:20px 22px; margin-bottom:18px;">
+                    <div class="card-header mb-16">
+                        <div class="card-title">Payment Collection Breakdown</div>
+                    </div>
+                    <div class="grid grid-3">
+                        <div
+                            style="padding:16px; background:var(--success-bg); border:1px solid var(--success-ring); border-radius:var(--r-lg);">
+                            <div
+                                style="font-size:10.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--success);margin-bottom:8px;font-weight:600;">
+                                💵 Cash Collected</div>
+                            <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:26px;font-weight:800; color:var(--success);"
+                                id="r-cash">₹0</div>
+                            <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;" id="r-cash-pct">0% of
+                                total</div>
+                        </div>
+                        <div
+                            style="padding:16px; background:var(--info-bg); border:1px solid rgba(56,189,248,0.25); border-radius:var(--r-lg);">
+                            <div
+                                style="font-size:10.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--info);margin-bottom:8px;font-weight:600;">
+                                📱 UPI / Card</div>
+                            <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:26px;font-weight:800; color:var(--info);"
+                                id="r-upi">₹0</div>
+                            <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;" id="r-upi-pct">0% of
+                                total</div>
+                        </div>
+                        <div
+                            style="padding:16px; background:var(--danger-bg); border:1px solid var(--danger-ring); border-radius:var(--r-lg);">
+                            <div
+                                style="font-size:10.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--danger);margin-bottom:8px;font-weight:600;">
+                                ⚠️ Udhaar</div>
+                            <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:26px;font-weight:800; color:var(--danger);"
+                                id="r-udhaar">₹0</div>
+                            <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;" id="r-udhaar-pct">0%
+                                of total</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        let currentRange = 'month';
+        let revenueChartInstance, paymentChartInstance;
+
+        function showToast(msg, type = 'info') {
+            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.innerHTML = `<span>${icons[type]}</span><span class="toast-msg">${msg}</span>`;
+            document.getElementById('toastContainer').appendChild(el);
+            setTimeout(() => el.remove(), 3500);
+        }
+
+        function setRange(range) {
+            currentRange = range;
+            ['today', 'week', 'month', 'custom'].forEach(r => {
+                document.getElementById(`btn-${r}`).className =
+                    `btn btn-sm ${r === range ? 'btn-primary' : 'btn-ghost'}`;
+            });
+
+            const labels = { today: 'Today', week: 'This Week', month: 'This Month', custom: 'Custom Range' };
+            document.getElementById('periodLabel').textContent = `${labels[range]} — Analytics & Performance`;
+            document.getElementById('chartPeriodLabel').textContent = range === 'today' ? 'Today' : `${labels[range]} breakdown`;
+            document.getElementById('customRange').style.display = range === 'custom' ? 'block' : 'none';
+
+            if (range !== 'custom') loadReport();
+        }
+
+        async function loadReport() {
+            let url = '/api/v1/daily-report';
+            if (currentRange === 'week') url = '/api/v1/weekly-report-summary';
+            if (currentRange === 'month') url = '/api/v1/monthly-report-summary';
+            if (currentRange === 'custom') {
+                const from = document.getElementById('customFrom').value;
+                const to = document.getElementById('customTo').value;
+                if (!from || !to) return showToast('Select both From and To dates', 'error');
+                url = `/api/v1/range-report?from=${from}&to=${to}`;
+            }
+
+            try {
+                const [reportRes, trendRes] = await Promise.all([
+                    fetch(url),
+                    fetch(`/api/v1/sales-trend?range=${currentRange}`)
+                ]);
+
+                const reportJson = await reportRes.json();
+                const report = reportJson?.data || reportJson;
+                let trend = trendRes.ok ? await trendRes.json() : []; trend = trend?.data?.data || trend?.data || trend;
+
+                const sales = report.totalSales || 0;
+                const profit = report.totalProfit || 0;
+                const credit = report.totalCredit || 0;
+                const bills = report.totalBills || 0;
+                const cash = report.totalCash || 0;
+                const upi = report.totalUPI || 0;
+                const avg = bills > 0 ? (sales / bills) : 0;
+                const margin = sales > 0 ? ((profit / sales) * 100).toFixed(1) : '0.0';
+                const fmt = n => '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+                const pct = v => sales > 0 ? (v / sales * 100).toFixed(1) + '% of total' : '0% of total';
+
+                document.getElementById('r-sales').textContent = fmt(sales);
+                document.getElementById('r-profit').textContent = fmt(profit);
+                document.getElementById('r-credit').textContent = fmt(credit);
+                document.getElementById('r-avg').textContent = '₹' + avg.toFixed(0);
+                document.getElementById('r-bills').textContent = bills + ' bills';
+                document.getElementById('r-margin').textContent = margin + '% margin';
+
+                document.getElementById('r-cash').textContent = fmt(cash);
+                document.getElementById('r-upi').textContent = fmt(upi);
+                document.getElementById('r-udhaar').textContent = fmt(credit);
+                document.getElementById('r-cash-pct').textContent = pct(cash);
+                document.getElementById('r-upi-pct').textContent = pct(upi);
+                document.getElementById('r-udhaar-pct').textContent = pct(credit);
+
+                renderTopProducts(report.products || []);
+                renderGSTSummary(report.gstSummary || []);
+                renderRevenueChart(trend);
+                renderPaymentChart(cash, upi, credit);
+
+            } catch (e) {
+                showToast('Failed to load report data', 'error');
+                console.error(e);
+            }
+        }
+
+        function renderTopProducts(products) {
+            const tbody = document.getElementById('topProductsTable');
+            if (!products.length) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">No product data</td></tr>';
+                return;
+            }
+            const medals = ['🥇', '🥈', '🥉'];
+            tbody.innerHTML = products.slice(0, 8).map((p, i) => `<tr>
+        <td>${medals[i] || (i + 1)}</td>
+        <td class="td-primary">${p.name}</td>
+        <td style="font-weight:700;">${p.total_quantity}</td>
+        <td class="td-amount">₹${p.total_revenue ? parseFloat(p.total_revenue).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}</td>
+    </tr>`).join('');
+        }
+
+        function renderGSTSummary(gstData) {
+            const el = document.getElementById('gstSummary');
+            if (!gstData.length) {
+                el.innerHTML = `<div class="empty-state" style="padding:28px;"><span class="empty-state-icon">🧾</span><p>No GST data available</p></div>`;
+                return;
+            }
+            const total = gstData.reduce((s, g) => s + (g.gst_amount || 0), 0);
+            el.innerHTML = `<div class="table-wrapper">
+        <table>
+            <thead><tr><th>GST Slab</th><th>Taxable</th><th>GST Collected</th></tr></thead>
+            <tbody>
+                ${gstData.map(g => `<tr>
+                    <td><span class="badge badge-muted">${g.gst_rate}%</span></td>
+                    <td>₹${parseFloat(g.taxable || 0).toFixed(2)}</td>
+                    <td class="text-warning" style="font-weight:600;">₹${parseFloat(g.gst_amount || 0).toFixed(2)}</td>
+                </tr>`).join('')}
+                <tr style="background:var(--bg-elevated);">
+                    <td colspan="2" style="font-weight:700;">Total GST Collected</td>
+                    <td class="text-gold" style="font-weight:800; font-family:'Bricolage Grotesque',sans-serif;">₹${total.toFixed(2)}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>`;
+        }
+
+        function renderRevenueChart(trend) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            if (revenueChartInstance) revenueChartInstance.destroy();
+
+            const labels = trend.map(d => {
+                const dt = new Date(d.date || d.period);
+                return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+            });
+            const values = trend.map(d => d.total || 0);
+
+            revenueChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.length ? labels : ['No Data'],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: values.length ? values : [0],
+                        backgroundColor: 'rgba(16,217,160,0.2)',
+                        borderColor: '#10d9a0',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        hoverBackgroundColor: 'rgba(16,217,160,0.4)',
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#141c2e', borderColor: '#1a2540', borderWidth: 1,
+                            titleColor: '#8ba0c8', bodyColor: '#f0f4fc', padding: 10,
+                            callbacks: { label: c => ' ₹' + c.parsed.y.toLocaleString('en-IN') }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: '#1a2540' }, ticks: { color: '#4a5c80', font: { size: 11 } } },
+                        y: { grid: { color: '#1a2540' }, ticks: { color: '#4a5c80', font: { size: 11 }, callback: v => '₹' + Number(v).toLocaleString('en-IN') } }
+                    }
+                }
+            });
+        }
+
+        function renderPaymentChart(cash, upi, credit) {
+            const ctx = document.getElementById('paymentMixChart').getContext('2d');
+            if (paymentChartInstance) paymentChartInstance.destroy();
+
+            paymentChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Cash', 'UPI / Card', 'Udhaar'],
+                    datasets: [{
+                        data: [cash, upi, credit],
+                        backgroundColor: ['#10d9a0', '#10d9a0', '#f43f5e'],
+                        borderColor: '#0f1521',
+                        borderWidth: 3,
+                        spacing: 3,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '68%',
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: '#8ba0c8', font: { size: 12 }, padding: 12, boxWidth: 10, borderRadius: 4 }
+                        },
+                        tooltip: {
+                            backgroundColor: '#141c2e', borderColor: '#1a2540', borderWidth: 1,
+                            callbacks: { label: c => ' ₹' + c.parsed.toLocaleString('en-IN') }
+                        }
+                    }
+                }
+            });
+        }
+
+        setRange('month');
+    </script>
+</body>
+
+</html>

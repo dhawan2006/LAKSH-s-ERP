@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Sale Returns</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/auth.js"></script>
+    <script src="js/dialog.js"></script>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">K</div>
+                    <div class="brand-text">
+                        <h2>Kirana ERP</h2><span>Business Suite</span>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <div class="sidebar-section-label">Main Menu</div>
+                <a href="index.html"><span class="nav-icon">⊞</span> Dashboard</a>
+                <a href="billing.html"><span class="nav-icon">🧾</span> POS Billing</a>
+                <a href="products.html"><span class="nav-icon">📦</span> Products</a>
+                <a href="categories.html"><span class="nav-icon">🏷️</span> Categories</a>
+                <a href="customers.html"><span class="nav-icon">👥</span> Customers</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Purchase</div>
+                <a href="purchase-orders.html"><span class="nav-icon">📋</span> Purchase Orders</a>
+                <a href="purchases.html"><span class="nav-icon">🛒</span> Purchases</a>
+                <a href="purchase-returns.html"><span class="nav-icon">↩️</span> Purchase Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Sales</div>
+                <a href="sale-orders.html"><span class="nav-icon">📑</span> Sale Orders</a>
+                <a href="sales.html"><span class="nav-icon">📊</span> Sales History</a>
+                <a href="sale-returns.html" class="active"><span class="nav-icon">🔄</span> Sale Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Finance</div>
+                <a href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+                <a href="profit-loss.html"><span class="nav-icon">💹</span> Profit &amp; Loss</a>
+                <a href="register.html"><span class="nav-icon">🗃️</span> Register</a>
+                <a href="settings-invoice.html"><span class="nav-icon">⚙️</span> Invoice Settings</a>
+                <a href="backup.html"><span class="nav-icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="store-avatar">S</div>
+                    <div class="store-info">
+                        <h4>Store Admin</h4><span>Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="main">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h3>Sale Returns</h3>
+                    <div class="breadcrumb">Process customer returns & refunds</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="status-pill"><span class="status-dot online"></span><span
+                            style="color:var(--success)">Online</span></div>
+                    <button class="btn btn-outline btn-sm" onclick="exportCSV()">⬇️ Export</button>
+                    <button class="btn btn-outline" id="analyticsToggleBtn" onclick="toggleAnalytics()">📊 Analytics</button>
+                    <button class="btn btn-primary" onclick="openAddModal()">+ New Return</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="grid grid-4 mb-20">
+                    <div class="stat-card blue"><span class="stat-icon">🔄</span>
+                        <div class="stat-label">Total Returns</div>
+                        <div class="stat-value" id="stat-total">0</div>
+                    </div>
+                    <div class="stat-card orange"><span class="stat-icon">💰</span>
+                        <div class="stat-label">Total Refunded</div>
+                        <div class="stat-value" id="stat-value">₹0</div>
+                    </div>
+                    <div class="stat-card green"><span class="stat-icon">💵</span>
+                        <div class="stat-label">Cash Refunds</div>
+                        <div class="stat-value" id="stat-cash">₹0</div>
+                    </div>
+                    <div class="stat-card cyan"><span class="stat-icon">📱</span>
+                        <div class="stat-label">UPI Refunds</div>
+                        <div class="stat-value" id="stat-upi">₹0</div>
+                    </div>
+                </div>
+                <div class="glass-card" style="padding:20px 22px; margin-bottom:18px;">
+                    <div class="card-header mb-16">
+                        <div>
+                            <div class="card-title">Sale Returns</div>
+                            <div class="card-subtitle" id="tableCount">Loading...</div>
+                        </div>
+                    </div>
+                    <!-- TASK 1: Filter Bar -->
+                    <div class="filters-bar" style="margin-bottom:14px;">
+                        <div class="search-bar" style="flex:1; min-width:180px;">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchReturn" placeholder="Search return #, invoice, reason, user..."
+                                oninput="filterReturns()">
+                        </div>
+                        <input type="date" id="dateFrom" onchange="filterReturns()" style="width:148px;"
+                            title="From date">
+                        <input type="date" id="dateTo" onchange="filterReturns()" style="width:148px;"
+                            title="To date">
+                        <select id="reasonFilter" class="filter-select" onchange="filterReturns()">
+                            <option value="">All Reasons</option>
+                            <option value="Damaged">Damaged</option>
+                            <option value="Expired">Expired</option>
+                            <option value="Wrong Item">Wrong Item</option>
+                            <option value="Customer Request">Customer Request</option>
+                            <option value="Quality Issue">Quality Issue</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕ Clear</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Return #</th>
+                                    <th>Invoice #</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Refund Cash</th>
+                                    <th>Refund UPI</th>
+                                    <th>Reason</th>
+                                    <th>Condition</th>
+                                    <th>Processed By</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="srTable">
+                                <tr>
+                                    <td colspan="10" style="text-align:center;padding:30px;color:var(--text-muted);">
+                                        Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Return Analytics Panel -->
+                <div class="glass-card" id="analyticsPanel" style="overflow:hidden; max-height:0; transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease; padding:0 22px; margin-bottom:0; opacity:0;" data-open="0">
+                    <div class="card-header mb-16">
+                        <div class="card-title">📊 Return Analytics</div>
+                        <button class="btn btn-outline btn-sm" onclick="toggleAnalytics()">Hide</button>
+                    </div>
+                    <div class="grid grid-4 mb-20" id="analyticsStats"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div>
+                            <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Top Returned Products</div>
+                            <div id="analyticsTopProducts"></div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Returns by Reason</div>
+                            <div id="analyticsReasons"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- New Return Modal (existing) -->
+    <div class="modal-overlay" id="srModal">
+        <div class="modal" style="max-width:760px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="srModalTitle">New Sale Return</div>
+                    <div class="modal-subtitle" id="srModalSubtitle" style="display:none;"></div>
+                </div>
+                <button class="modal-close" onclick="closeModal('srModal')">✕</button>
+            </div>
+
+            <!-- Step 1: Invoice selection -->
+            <div id="srStep1">
+                <div class="form-group">
+                    <label>Invoice <span style="color:var(--danger);font-size:11px;" id="srAdminNote"></span></label>
+                    <!-- Hidden select for value binding -->
+                    <select id="sr_sale_id" style="display:none;">
+                        <option value="">— Select Invoice to load items —</option>
+                    </select>
+                    <!-- TASK 6: Searchable Invoice Dropdown -->
+                    <div style="position:relative;">
+                        <input type="text" id="sr_invoice_search" placeholder="Search invoice or customer..."
+                            autocomplete="off" oninput="onInvoiceSearchInput()" onfocus="onInvoiceSearchFocus()"
+                            onkeydown="onInvoiceSearchKeydown(event)">
+                        <div id="sr_invoice_dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;
+                            max-height:240px;overflow-y:auto;background:var(--bg-elevated);border:1px solid var(--border);
+                            border-radius:var(--r-sm);box-shadow:0 8px 24px rgba(0,0,0,0.25);z-index:100;margin-top:2px;">
+                        </div>
+                    </div>
+                </div>
+                <div id="srInvoiceWarning"></div>
+                <div id="srLoadingItems" style="display:none;text-align:center;padding:16px;color:var(--text-muted);font-size:13px;">
+                    Loading invoice items...
+                </div>
+            </div>
+
+            <!-- Step 2: Items (auto-loaded from invoice) -->
+            <div id="srStep2" style="display:none;">
+                <div id="srPaymentHint" style="display:none;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.25);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:var(--text-secondary);"></div>
+                <div class="table-wrapper" style="margin-bottom:12px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Sold</th>
+                                <th>Already Returned</th>
+                                <th>Max Returnable</th>
+                                <th>Return Qty</th>
+                                <th>Price</th>
+                                <th>Condition</th>
+                                <th>Line Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="srItemsBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="form-row" style="margin-bottom:12px;">
+                    <div class="form-group">
+                        <label>Reason <span style="color:var(--danger)">*</span></label>
+                        <select id="sr_reason_select">
+                            <option value="">— Select reason —</option>
+                            <option value="Damaged">Damaged</option>
+                            <option value="Expired">Expired</option>
+                            <option value="Wrong Item">Wrong Item</option>
+                            <option value="Customer Request">Customer Request</option>
+                            <option value="Quality Issue">Quality Issue</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Note (optional)</label>
+                        <input type="text" id="sr_reason_note" placeholder="Additional detail...">
+                    </div>
+                </div>
+
+                <div class="form-row" style="margin-bottom:12px;">
+                    <div class="form-group">
+                        <label>💵 Cash Refund (₹)</label>
+                        <input type="number" id="sr_cash" min="0" placeholder="0" oninput="onRefundInput()">
+                    </div>
+                    <div class="form-group">
+                        <label>📲 UPI Refund (₹)</label>
+                        <input type="number" id="sr_upi" min="0" placeholder="0" oninput="onRefundInput()">
+                    </div>
+                </div>
+
+                <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:13px;">Return Total:</span>
+                    <strong id="srTotal" style="font-size:16px;">₹0</strong>
+                </div>
+                <div id="srRefundWarning" style="display:none; margin-top:8px; padding:9px 13px; background:var(--warning-bg); border:1px solid rgba(245,158,11,0.3); border-radius:var(--r-sm); font-size:12.5px; color:var(--warning);"></div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('srModal')">Cancel</button>
+                <button class="btn btn-primary" id="srSubmitBtn" style="display:none;" onclick="saveSR()">
+                    💾 Process Return
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TASK 2: Return Detail Modal -->
+    <div class="modal-overlay" id="srDetailModal">
+        <div class="modal" style="max-width:700px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="srDetailTitle">Return Details</div>
+                    <div class="modal-subtitle" id="srDetailSubtitle"></div>
+                </div>
+                <button class="modal-close" onclick="closeModal('srDetailModal')">✕</button>
+            </div>
+            <div id="srDetailContent">
+                <div style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('srDetailModal')">Close</button>
+                <button class="btn btn-primary" id="printReturnBtn">🖨️ Print Return Slip</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script>
+    // ── State ────────────────────────────────────────────────────────────────
+    let allReturns = [], filteredReturns = [], allProducts = [], allSales = [], srItemCount = 0;
+    let _submitting = false;
+    let _currentReturnItems = []; // items loaded from invoice
+    let _analyticsLoaded = false;
+    let _invoiceDropdownIdx = -1; // keyboard nav index for invoice dropdown
+    let _returnWindowDays = 7; // default, will be overwritten on load
+
+    const userRole = localStorage.getItem('role') || 'worker';
+
+    // ── Utilities ────────────────────────────────────────────────────────────
+    function showToast(msg, type = 'info') {
+        const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+        const el = document.createElement('div');
+        el.className = `toast ${type}`;
+        el.innerHTML = `<span>${icons[type] || 'ℹ️'}</span>
+                        <span class="toast-msg">${msg}</span>
+                        <button class="toast-close" onclick="this.parentElement.remove()">✕</button>`;
+        document.getElementById('toastContainer').appendChild(el);
+        setTimeout(() => el?.remove(), 4000);
+    }
+
+    function openModal(id)  { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    const fmt = n => '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+
+    function escHtml(s) {
+        if (!s) return '';
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Data Loading ─────────────────────────────────────────────────────────
+    async function loadData() {
+        try {
+            const [retRes, salesRes] = await Promise.all([
+                fetch('/api/v1/sale-returns'),
+                fetch('/api/v1/sales?limit=200')
+            ]);
+            const [retJson, salesJson] = await Promise.all([
+                retRes.json(), salesRes.json()
+            ]);
+            if (!retRes.ok)   throw new Error(retJson.message || 'Failed to load returns');
+            if (!salesRes.ok) throw new Error(salesJson.message || 'Failed to load sales');
+
+            allReturns = retJson?.data || [];
+            allSales   = salesJson?.data?.data || salesJson?.data || [];
+
+            const totalVal  = allReturns.reduce((s, r) => s + (r.total_amount || 0), 0);
+            const totalCash = allReturns.reduce((s, r) => s + (r.refund_cash  || 0), 0);
+            const totalUpi  = allReturns.reduce((s, r) => s + (r.refund_upi   || 0), 0);
+
+            document.getElementById('stat-total').textContent = allReturns.length;
+            document.getElementById('stat-value').textContent = fmt(totalVal);
+            document.getElementById('stat-cash').textContent  = fmt(totalCash);
+            document.getElementById('stat-upi').textContent   = fmt(totalUpi);
+
+            filterReturns();
+        } catch (err) {
+            console.error('[loadData]', err);
+            showToast('Failed to load data: ' + err.message, 'error');
+            document.getElementById('tableCount').textContent = 'Error loading data';
+            ['stat-total','stat-value','stat-cash','stat-upi']
+                .forEach(id => document.getElementById(id).textContent = '—');
+        }
+    }
+
+    // ── TASK 1: Filter Returns ───────────────────────────────────────────────
+    function filterReturns() {
+        const kw = document.getElementById('searchReturn').value.toLowerCase().trim();
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        const reasonF = document.getElementById('reasonFilter').value;
+
+        let list = [...allReturns];
+
+        if (kw) {
+            list = list.filter(r =>
+                (r.return_number || '').toLowerCase().includes(kw) ||
+                (r.linked_invoice_number || '').toLowerCase().includes(kw) ||
+                (r.reason || '').toLowerCase().includes(kw) ||
+                (r.processed_by_name || '').toLowerCase().includes(kw)
+            );
+        }
+
+        if (dateFrom) {
+            list = list.filter(r => {
+                const d = (r.created_at_local || r.created_at || '').split(' ')[0];
+                return d >= dateFrom;
+            });
+        }
+        if (dateTo) {
+            list = list.filter(r => {
+                const d = (r.created_at_local || r.created_at || '').split(' ')[0];
+                return d <= dateTo;
+            });
+        }
+
+        if (reasonF) {
+            list = list.filter(r => (r.reason || '').toLowerCase().startsWith(reasonF.toLowerCase()));
+        }
+
+        filteredReturns = list;
+
+        // Update count label
+        const countEl = document.getElementById('tableCount');
+        if (list.length === allReturns.length) {
+            countEl.textContent = allReturns.length + ' returns';
+        } else {
+            countEl.textContent = `${list.length} of ${allReturns.length} returns`;
+        }
+
+        renderTable(list);
+    }
+
+    function clearFilters() {
+        ['searchReturn', 'dateFrom', 'dateTo', 'reasonFilter'].forEach(id => document.getElementById(id).value = '');
+        filterReturns();
+    }
+
+    // ── TASK 4: Condition Badge Helper ───────────────────────────────────────
+    function getConditionBadge(conditionSummary) {
+        if (!conditionSummary) return '<span class="badge badge-info">—</span>';
+        const conditions = conditionSummary.split(',').map(c => c.trim().toLowerCase());
+        const unique = [...new Set(conditions)];
+
+        if (unique.length === 1) {
+            if (unique[0] === 'resellable') return '<span class="badge badge-success">Resellable</span>';
+            if (unique[0] === 'damaged')    return '<span class="badge badge-danger">Damaged</span>';
+            if (unique[0] === 'expired')    return '<span class="badge badge-warning">Expired</span>';
+        }
+
+        // Mixed or has damaged/expired
+        if (conditions.includes('damaged'))  return '<span class="badge badge-danger">Damaged</span>';
+        if (conditions.includes('expired'))  return '<span class="badge badge-warning">Expired</span>';
+        return '<span class="badge badge-info">Mixed</span>';
+    }
+
+    // ── TASK 5: Truncate reason with tooltip ─────────────────────────────────
+    function truncateReason(reason) {
+        if (!reason) return '—';
+        const escaped = escHtml(reason);
+        if (reason.length <= 18) return `<span title="${escaped}" style="cursor:default;">${escaped}</span>`;
+        return `<span title="${escaped}" style="cursor:default;">${escHtml(reason.substring(0, 18))}…</span>`;
+    }
+
+    // ── Table Render ─────────────────────────────────────────────────────────
+    function renderTable(list) {
+        const tbody = document.getElementById('srTable');
+        if (!list || !list.length) {
+            tbody.innerHTML = `<tr><td colspan="10">
+                <div class="empty-state"><span class="empty-state-icon">🔄</span>
+                <h4>No sale returns found</h4>
+                <p style="color:var(--text-muted);font-size:13px;">Use "+ New Return" to process a return</p>
+                </div></td></tr>`;
+            return;
+        }
+        tbody.innerHTML = list.map(r => `<tr onclick="onReturnRowClick(event, ${r.id})" style="cursor:pointer;">
+            <td style="font-family:monospace;font-size:12px;font-weight:600;">${r.return_number}</td>
+            <td style="font-family:monospace;font-size:12px;color:var(--text-muted);">${r.linked_invoice_number || (r.sale_id ? '#' + r.sale_id : '—')}
+                ${r.linked_sale_status === 'VOIDED' ? ' <span style="color:var(--danger);font-size:10px;font-weight:600;" title="Linked invoice was voided — verify this refund is still valid">⚠ VOID</span>' : ''}</td>
+            <td><span class="badge badge-info">${r.item_count} item${r.item_count !== 1 ? 's' : ''}</span></td>
+            <td class="td-amount">${fmt(r.total_amount)}</td>
+            <td class="text-success">${fmt(r.refund_cash)}</td>
+            <td class="text-success">${fmt(r.refund_upi)}</td>
+            <td style="font-size:12px;">${truncateReason(r.reason)}</td>
+            <td>${getConditionBadge(r.condition_summary)}</td>
+            <td style="font-size:11.5px;color:var(--text-muted);">${r.processed_by_name || '—'}</td>
+            <td style="font-size:11.5px;color:var(--text-muted);">${r.created_at_local ? r.created_at_local.split(' ')[0] : '—'}</td>
+        </tr>`).join('');
+    }
+
+    // ── TASK 2: Return Detail Modal ──────────────────────────────────────────
+    function onReturnRowClick(e, returnId) {
+        // Don't open detail if clicking a button inside the row
+        if (e.target.closest('button')) return;
+        openReturnDetail(returnId);
+    }
+
+    async function openReturnDetail(id) {
+        document.getElementById('srDetailTitle').textContent = 'Return Details';
+        document.getElementById('srDetailSubtitle').textContent = 'Loading...';
+        document.getElementById('srDetailContent').innerHTML =
+            '<div style="text-align:center;padding:30px;color:var(--text-muted);">Loading return details...</div>';
+        document.getElementById('printReturnBtn').onclick = () => {};
+        openModal('srDetailModal');
+
+        try {
+            const res = await fetch(`/api/v1/sale-return/${id}`);
+            if (!res.ok) throw new Error('Return not found');
+            const json = await res.json();
+            const data = json?.data || json;
+
+            document.getElementById('srDetailTitle').textContent = `Return ${data.return_number}`;
+            document.getElementById('srDetailSubtitle').textContent =
+                data.linked_invoice_number ? `Invoice: ${data.linked_invoice_number}` : 'No linked invoice';
+
+            const dtStr = data.created_at_local
+                ? new Date(data.created_at_local).toLocaleString('en-IN')
+                : (data.created_at ? new Date(data.created_at).toLocaleString('en-IN') : '—');
+
+            const statusBadge = data.status === 'COMPLETED'
+                ? '<span class="badge badge-success">Completed</span>'
+                : `<span class="badge badge-info">${escHtml(data.status || 'Unknown')}</span>`;
+
+            function condBadge(c) {
+                if (!c) return '—';
+                const cl = c.toLowerCase();
+                if (cl === 'resellable') return '<span class="badge badge-success">Resellable</span>';
+                if (cl === 'damaged')    return '<span class="badge badge-danger">Damaged</span>';
+                if (cl === 'expired')    return '<span class="badge badge-warning">Expired</span>';
+                return `<span class="badge badge-info">${escHtml(c)}</span>`;
+            }
+
+            const items = data.items || [];
+            const voidedWarning = data.linked_invoice_status === 'VOIDED'
+                ? `<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--danger);font-weight:600;">
+                    ⚠️ Linked invoice was voided
+                   </div>` : '';
+
+            document.getElementById('srDetailContent').innerHTML = `
+                ${voidedWarning}
+                <div class="grid grid-2 mb-16" style="margin-bottom:16px;">
+                    ${[
+                        ['Return #', `<span style="font-weight:700;color:var(--text-accent);">${escHtml(data.return_number)}</span>`],
+                        ['Invoice #', escHtml(data.linked_invoice_number || '—')],
+                        ['Date & Time', dtStr],
+                        ['Processed By', escHtml(data.processed_by_name || '—')],
+                        ['Reason', escHtml(data.reason || '—')],
+                        ['Status', statusBadge],
+                    ].map(([k, v]) => `<div style="padding:10px 12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);">
+                        <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-muted);margin-bottom:4px;">${k}</div>
+                        <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${v}</div>
+                    </div>`).join('')}
+                </div>
+
+                <div class="table-wrapper" style="margin-bottom:16px;">
+                    <table>
+                        <thead><tr><th>Product</th><th>Qty</th><th>Price</th><th>Discount%</th><th>Condition</th><th>Line Total</th></tr></thead>
+                        <tbody>
+                            ${items.length ? items.map(i => {
+                                const lineTotal = i.quantity * i.price * (1 - (i.discount || 0) / 100);
+                                return `<tr>
+                                    <td class="td-primary">${escHtml(i.product_name || '—')}</td>
+                                    <td>${i.quantity}</td>
+                                    <td>${fmt(i.price)}</td>
+                                    <td>${i.discount || 0}%</td>
+                                    <td>${condBadge(i.return_condition)}</td>
+                                    <td class="td-amount">${fmt(lineTotal)}</td>
+                                </tr>`;
+                            }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:16px;">No items</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div>
+                    <div class="amount-row"><span class="label">Return Total</span><span>${fmt(data.total_amount)}</span></div>
+                    <div class="amount-row"><span class="label">Cash Refund</span><span class="text-success">${fmt(data.refund_cash)}</span></div>
+                    <div class="amount-row"><span class="label">UPI Refund</span><span class="text-success">${fmt(data.refund_upi)}</span></div>
+                </div>`;
+
+            document.getElementById('printReturnBtn').onclick = () => printReturnSlip(data);
+
+        } catch (err) {
+            document.getElementById('srDetailContent').innerHTML =
+                `<div style="padding:20px;color:var(--danger);">Could not load return details: ${escHtml(err.message)}</div>`;
+        }
+    }
+
+    // ── Print Return Slip ────────────────────────────────────────────────────
+    function printReturnSlip(data) {
+        const items = data.items || [];
+        const dtStr = data.created_at_local
+            ? new Date(data.created_at_local).toLocaleString('en-IN')
+            : (data.created_at ? new Date(data.created_at).toLocaleString('en-IN') : '—');
+
+        const itemRows = items.map(i => {
+            const lineTotal = i.quantity * i.price * (1 - (i.discount || 0) / 100);
+            return `<tr>
+                <td style="padding:3px 6px;font-size:12px;border-bottom:1px dashed #ccc;">${escHtml(i.product_name || '—')}</td>
+                <td style="padding:3px 6px;font-size:12px;text-align:center;border-bottom:1px dashed #ccc;">${i.quantity}</td>
+                <td style="padding:3px 6px;font-size:12px;text-align:right;border-bottom:1px dashed #ccc;">₹${Number(lineTotal).toFixed(2)}</td>
+            </tr>`;
+        }).join('');
+
+        const html = `<!DOCTYPE html><html><head><title>Return Slip</title></head><body style="font-family:'Courier New',monospace;width:280px;margin:0 auto;padding:10px;color:#000;">
+            <div style="text-align:center;margin-bottom:8px;">
+                <div style="font-size:16px;font-weight:bold;">Kirana ERP</div>
+                <div style="font-size:11px;color:#666;margin-top:2px;">Return Receipt</div>
+            </div>
+            <div style="border-top:1px dashed #000;border-bottom:1px dashed #000;padding:6px 0;font-size:11px;margin-bottom:6px;">
+                <div><strong>Return #:</strong> ${escHtml(data.return_number)}</div>
+                <div><strong>Date:</strong> ${dtStr}</div>
+                ${data.linked_invoice_number ? `<div><strong>Invoice:</strong> ${escHtml(data.linked_invoice_number)}</div>` : ''}
+            </div>
+            <table style="width:100%;border-collapse:collapse;margin-bottom:6px;">
+                <thead><tr>
+                    <th style="text-align:left;font-size:11px;padding:3px 6px;border-bottom:1px solid #000;">Item</th>
+                    <th style="text-align:center;font-size:11px;padding:3px 6px;border-bottom:1px solid #000;">Qty</th>
+                    <th style="text-align:right;font-size:11px;padding:3px 6px;border-bottom:1px solid #000;">Total</th>
+                </tr></thead>
+                <tbody>${itemRows}</tbody>
+            </table>
+            <div style="border-top:1px dashed #000;padding-top:6px;font-size:12px;">
+                <div style="display:flex;justify-content:space-between;"><span>Return Total:</span><strong>₹${Number(data.total_amount || 0).toFixed(2)}</strong></div>
+                <div style="display:flex;justify-content:space-between;"><span>Cash Refund:</span><span>₹${Number(data.refund_cash || 0).toFixed(2)}</span></div>
+                <div style="display:flex;justify-content:space-between;"><span>UPI Refund:</span><span>₹${Number(data.refund_upi || 0).toFixed(2)}</span></div>
+            </div>
+            <div style="border-top:1px dashed #000;margin-top:6px;padding-top:6px;font-size:11px;">
+                <strong>Reason:</strong> ${escHtml(data.reason || '—')}
+            </div>
+            <div style="text-align:center;margin-top:12px;font-size:10px;color:#999;">Thank you</div>
+        </body></html>`;
+
+        const w = window.open('', '_blank', 'width=320,height=600');
+        w.document.write(html);
+        w.document.close();
+        setTimeout(() => { w.print(); }, 300);
+    }
+
+    // ── TASK 3: CSV Export ────────────────────────────────────────────────────
+    function exportCSV() {
+        const list = filteredReturns.length ? filteredReturns : allReturns;
+        const header = ['Return #', 'Invoice #', 'Items', 'Total', 'Cash Refund', 'UPI Refund', 'Reason', 'Processed By', 'Date'];
+        const rows = list.map(r => [
+            r.return_number,
+            r.linked_invoice_number || '',
+            r.item_count || 0,
+            r.total_amount || 0,
+            r.refund_cash || 0,
+            r.refund_upi || 0,
+            r.reason || '',
+            r.processed_by_name || '',
+            r.created_at_local ? r.created_at_local.split(' ')[0] : '',
+        ]);
+        const csv = [header, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+        const a = Object.assign(document.createElement('a'), {
+            href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })),
+            download: `sale_returns_${new Date().toISOString().split('T')[0]}.csv`,
+        });
+        a.click();
+        showToast('Returns exported as CSV', 'success');
+    }
+
+    // ── Open Modal ────────────────────────────────────────────────────────────
+    function openAddModal() {
+        _submitting = false;
+        _currentReturnItems = [];
+
+        document.getElementById('srStep2').style.display = 'none';
+        document.getElementById('srSubmitBtn').style.display = 'none';
+        document.getElementById('srStep1').style.display = 'block';
+        document.getElementById('srLoadingItems').style.display = 'none';
+        document.getElementById('srInvoiceWarning').innerHTML = '';
+        document.getElementById('srPaymentHint').style.display = 'none';
+        document.getElementById('srModalTitle').textContent = 'New Sale Return';
+        document.getElementById('srModalSubtitle').style.display = 'none';
+        document.getElementById('srTotal').textContent = '₹0';
+
+        const cashEl = document.getElementById('sr_cash');
+        cashEl.value = '';
+        delete cashEl.dataset.userEdited;
+        document.getElementById('sr_upi').value = '';
+        document.getElementById('sr_reason_select').value = '';
+        document.getElementById('sr_reason_note').value = '';
+
+        // Show admin note if worker
+        const noteEl = document.getElementById('srAdminNote');
+        if (userRole !== 'admin') {
+            noteEl.textContent = '(invoice required — freeform returns are admin-only)';
+        } else {
+            noteEl.textContent = '';
+        }
+
+        // Populate invoice dropdown (hidden select)
+        const sel = document.getElementById('sr_sale_id');
+        sel.innerHTML = '<option value="">— Select Invoice to load items —</option>' +
+            allSales.map(s =>
+                `<option value="${s.id}">${s.invoice_number} — ${s.customer_name || 'Walk-in'} (₹${parseFloat(s.final_amount || 0).toFixed(0)})</option>`
+            ).join('');
+        sel.value = '';
+
+        // Reset searchable dropdown
+        document.getElementById('sr_invoice_search').value = '';
+        closeInvoiceDropdown();
+
+        openModal('srModal');
+    }
+
+    // ── TASK 6: Searchable Invoice Dropdown ──────────────────────────────────
+    function onInvoiceSearchInput() {
+        const query = document.getElementById('sr_invoice_search').value.toLowerCase().trim();
+        _invoiceDropdownIdx = -1;
+        renderInvoiceDropdown(query);
+    }
+
+    function onInvoiceSearchFocus() {
+        const query = document.getElementById('sr_invoice_search').value.toLowerCase().trim();
+        renderInvoiceDropdown(query);
+    }
+
+    function renderInvoiceDropdown(query) {
+        const dd = document.getElementById('sr_invoice_dropdown');
+        let results = allSales;
+
+        if (query) {
+            results = results.filter(s =>
+                (s.invoice_number || '').toLowerCase().includes(query) ||
+                (s.customer_name || '').toLowerCase().includes(query)
+            );
+        }
+
+        results = results.slice(0, 20);
+
+        if (!results.length) {
+            dd.innerHTML = '<div style="padding:12px 14px;font-size:13px;color:var(--text-muted);">No invoices found</div>';
+            dd.style.display = 'block';
+            return;
+        }
+
+        dd.innerHTML = results.map((s, i) =>
+            `<div class="invoice-dd-item" data-idx="${i}" data-id="${s.id}"
+                onclick="selectInvoiceFromDropdown(${s.id}, this)"
+                onmouseenter="_invoiceDropdownIdx=${i};highlightInvoiceItem()"
+                style="padding:8px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px;transition:background 0.1s;">
+                <div style="font-weight:600;color:var(--text-primary);">${escHtml(s.invoice_number)}</div>
+                <div style="font-size:11.5px;color:var(--text-muted);">${escHtml(s.customer_name || 'Walk-in')} · ₹${parseFloat(s.final_amount || 0).toFixed(0)}</div>
+            </div>`
+        ).join('');
+        dd.style.display = 'block';
+    }
+
+    function highlightInvoiceItem() {
+        const dd = document.getElementById('sr_invoice_dropdown');
+        const items = dd.querySelectorAll('.invoice-dd-item');
+        items.forEach((item, i) => {
+            item.style.background = i === _invoiceDropdownIdx ? 'var(--bg-hover, rgba(99,102,241,0.1))' : '';
+        });
+    }
+
+    function selectInvoiceFromDropdown(id, el) {
+        const sale = allSales.find(s => s.id === id);
+        if (!sale) return;
+
+        document.getElementById('sr_sale_id').value = id;
+        document.getElementById('sr_invoice_search').value =
+            `${sale.invoice_number} — ${sale.customer_name || 'Walk-in'}`;
+        closeInvoiceDropdown();
+        onInvoiceSelect();
+    }
+
+    function closeInvoiceDropdown() {
+        document.getElementById('sr_invoice_dropdown').style.display = 'none';
+        _invoiceDropdownIdx = -1;
+    }
+
+    function onInvoiceSearchKeydown(e) {
+        const dd = document.getElementById('sr_invoice_dropdown');
+        const items = dd.querySelectorAll('.invoice-dd-item');
+        const count = items.length;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            _invoiceDropdownIdx = Math.min(_invoiceDropdownIdx + 1, count - 1);
+            highlightInvoiceItem();
+            if (items[_invoiceDropdownIdx]) items[_invoiceDropdownIdx].scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            _invoiceDropdownIdx = Math.max(_invoiceDropdownIdx - 1, 0);
+            highlightInvoiceItem();
+            if (items[_invoiceDropdownIdx]) items[_invoiceDropdownIdx].scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (_invoiceDropdownIdx >= 0 && items[_invoiceDropdownIdx]) {
+                items[_invoiceDropdownIdx].click();
+            }
+        } else if (e.key === 'Escape') {
+            closeInvoiceDropdown();
+        }
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#sr_invoice_search') && !e.target.closest('#sr_invoice_dropdown')) {
+            closeInvoiceDropdown();
+        }
+    });
+
+    // ── Invoice Selected — Auto-load Items ───────────────────────────────────
+    async function onInvoiceSelect() {
+        const saleId = parseInt(document.getElementById('sr_sale_id').value);
+        document.getElementById('srStep2').style.display = 'none';
+        document.getElementById('srSubmitBtn').style.display = 'none';
+        document.getElementById('srInvoiceWarning').innerHTML = '';
+        document.getElementById('srPaymentHint').style.display = 'none';
+        _currentReturnItems = [];
+
+        if (!saleId) return;
+
+        document.getElementById('srLoadingItems').style.display = 'block';
+
+        try {
+            const res  = await fetch(`/api/v1/sale/${saleId}/returnable-items`);
+            const json = await res.json();
+
+            document.getElementById('srLoadingItems').style.display = 'none';
+
+            if (!res.ok) {
+                document.getElementById('srInvoiceWarning').innerHTML =
+                    `<div style="color:var(--danger);font-size:13px;padding:8px 0;">❌ ${json.message || 'Failed to load invoice'}</div>`;
+                return;
+            }
+
+            const { sale, items } = json.data;
+
+            // Show payment hint for refund suggestion
+            const hintEl = document.getElementById('srPaymentHint');
+            if (sale.cash_paid > 0 || sale.upi_paid > 0) {
+                hintEl.innerHTML = `💡 Original payment — Cash: <strong>${fmt(sale.cash_paid)}</strong>, UPI: <strong>${fmt(sale.upi_paid)}</strong>${sale.credit_amount > 0 ? `, Credit: <strong>${fmt(sale.credit_amount)}</strong>` : ''}. Refund in same mode is recommended.`;
+                hintEl.style.display = 'block';
+            }
+
+            if (items.length === 0) {
+                document.getElementById('srInvoiceWarning').innerHTML =
+                    `<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">⚠️ All items in this invoice have already been fully returned.</div>`;
+                return;
+            }
+
+            const saleDate = new Date(sale.created_at);
+            const daysDiff = Math.floor((Date.now() - saleDate.getTime()) / 86400000);
+            const warningEl = document.getElementById('srInvoiceWarning');
+
+            warningEl.innerHTML = '';
+
+            if (_returnWindowDays > 0 && daysDiff > Math.floor(_returnWindowDays * 0.75)) {
+                const isExpired = daysDiff > _returnWindowDays;
+                const bg    = isExpired ? 'var(--danger-bg)'   : 'var(--warning-bg)';
+                const color = isExpired ? 'var(--danger)'       : 'var(--warning)';
+                const ring  = isExpired ? 'var(--danger-ring)'  : 'rgba(245,158,11,0.3)';
+                const icon  = isExpired ? '🚫' : '⚠️';
+                const msg   = isExpired
+                    ? `Return window of ${_returnWindowDays} day(s) has expired — this invoice is ${daysDiff} days old. The server will reject this return unless the window is extended in Invoice Settings.`
+                    : `Invoice is ${daysDiff} day(s) old. Return window closes in ${_returnWindowDays - daysDiff} day(s). Proceed promptly.`;
+
+                warningEl.innerHTML = `
+                    <div style="background:${bg};border:1px solid ${ring};border-radius:var(--r-sm);
+                                padding:9px 13px;margin-bottom:10px;font-size:12.5px;color:${color};">
+                        ${icon} ${msg}
+                    </div>`;
+            }
+
+            // Store items and render
+            _currentReturnItems = items.map(i => ({ ...i, return_qty: 0, condition: 'resellable' }));
+            renderReturnItemsTable();
+
+            document.getElementById('srModalSubtitle').textContent =
+                `${sale.invoice_number} — ${sale.customer_name || 'Walk-in'} — ₹${sale.final_amount}`;
+            document.getElementById('srModalSubtitle').style.display = 'block';
+
+            document.getElementById('srStep2').style.display = 'block';
+            document.getElementById('srSubmitBtn').style.display = 'inline-block';
+
+        } catch (err) {
+            document.getElementById('srLoadingItems').style.display = 'none';
+            showToast('Failed to load invoice items: ' + err.message, 'error');
+        }
+    }
+
+    // ── Render Items Table ────────────────────────────────────────────────────
+    function renderReturnItemsTable() {
+        const tbody = document.getElementById('srItemsBody');
+        let total = 0;
+
+        tbody.innerHTML = _currentReturnItems.map((item, idx) => {
+            const lineTotal = item.return_qty * item.price * (1 - (item.discount || 0) / 100);
+            total += lineTotal;
+            return `<tr>
+                <td style="font-size:13px;">${item.product_name}</td>
+                <td style="text-align:center;">${item.sold_qty}</td>
+                <td style="text-align:center;color:var(--text-muted);">${item.already_returned}</td>
+                <td style="text-align:center;font-weight:600;">${item.remaining_qty}</td>
+                <td>
+                    <input type="number" value="${item.return_qty}" min="0" max="${item.remaining_qty}"
+                        style="width:60px;padding:4px 6px;font-size:12px;"
+                        oninput="updateReturnQty(${idx}, this.value, ${item.remaining_qty})">
+                </td>
+                <td style="font-size:12px;">₹${item.price}</td>
+                <td>
+                    <select style="font-size:12px;padding:3px 6px;" onchange="updateCondition(${idx}, this.value)">
+                        <option value="resellable" ${item.condition==='resellable'?'selected':''}>✅ Resellable</option>
+                        <option value="damaged"    ${item.condition==='damaged'?'selected':''}>🔴 Damaged</option>
+                        <option value="expired"    ${item.condition==='expired'?'selected':''}>⚠️ Expired</option>
+                    </select>
+                </td>
+                <td class="td-amount">₹${lineTotal.toFixed(2)}</td>
+            </tr>`;
+        }).join('');
+
+        document.getElementById('srTotal').textContent = fmt(total);
+
+        // Auto-suggest cash refund
+        const cashEl = document.getElementById('sr_cash');
+        if (!cashEl.dataset.userEdited) {
+            cashEl.value = total > 0 ? total.toFixed(2) : '';
+        }
+        checkRefundMismatch();
+    }
+
+    function updateReturnQty(idx, val, max) {
+        let q = parseInt(val) || 0;
+        if (q < 0) q = 0;
+        if (q > max) q = max;
+        _currentReturnItems[idx].return_qty = q;
+        renderReturnItemsTable();
+    }
+
+    function updateCondition(idx, val) {
+        _currentReturnItems[idx].condition = val;
+    }
+
+    function onRefundInput() {
+        document.getElementById('sr_cash').dataset.userEdited = '1';
+        checkRefundMismatch();
+    }
+
+    function checkRefundMismatch() {
+        const warnEl = document.getElementById('srRefundWarning');
+        if (!warnEl) return;
+        
+        const itemsSelected = _currentReturnItems.filter(i => i.return_qty > 0);
+        if (itemsSelected.length === 0) { warnEl.style.display = 'none'; return; }
+        
+        const returnTotal = itemsSelected.reduce((s, i) =>
+            s + i.return_qty * i.price * (1 - (i.discount || 0) / 100), 0);
+        
+        const refundCash = parseFloat(document.getElementById('sr_cash')?.value) || 0;
+        const refundUpi  = parseFloat(document.getElementById('sr_upi')?.value)  || 0;
+        const totalRefund = refundCash + refundUpi;
+        
+        const unrefunded = returnTotal - totalRefund;
+        
+        if (unrefunded > 0.01) {
+            warnEl.style.display = 'block';
+            warnEl.textContent = `⚠ ₹${unrefunded.toFixed(2)} will be unrefunded. Customer receives no cash/UPI for this amount.`;
+        } else if (totalRefund > returnTotal + 0.01) {
+            warnEl.style.display = 'block';
+            warnEl.textContent = `⚠ Refund ₹${totalRefund.toFixed(2)} exceeds return value ₹${returnTotal.toFixed(2)}.`;
+        } else {
+            warnEl.style.display = 'none';
+        }
+    }
+
+    // ── Validate ──────────────────────────────────────────────────────────────
+    function validateSrForm() {
+        const reasonSel  = document.getElementById('sr_reason_select').value;
+        if (!reasonSel) {
+            showToast('Please select a reason for the return', 'error');
+            document.getElementById('sr_reason_select').focus();
+            return false;
+        }
+
+        const itemsToReturn = _currentReturnItems.filter(i => i.return_qty > 0);
+        if (itemsToReturn.length === 0) {
+            showToast('Enter a return quantity for at least one item', 'error');
+            return false;
+        }
+
+        let total = 0;
+        itemsToReturn.forEach(i => {
+            total += i.return_qty * i.price * (1 - (i.discount || 0) / 100);
+        });
+
+        const refundCash = parseFloat(document.getElementById('sr_cash').value) || 0;
+        const refundUpi  = parseFloat(document.getElementById('sr_upi').value)  || 0;
+
+        if (refundCash < 0 || refundUpi < 0) {
+            showToast('Refund amounts cannot be negative', 'error');
+            return false;
+        }
+        if (refundCash + refundUpi > total + 0.01) {
+            showToast(`Refund ₹${(refundCash + refundUpi).toFixed(2)} exceeds return value ₹${total.toFixed(2)}`, 'error');
+            return false;
+        }
+
+        return true;
+    }
+
+    // ── Save Return ───────────────────────────────────────────────────────────
+    async function saveSR() {
+        if (_submitting) return;
+        if (!validateSrForm()) return;
+
+        const itemsToReturn = _currentReturnItems.filter(i => i.return_qty > 0);
+        const reasonSel  = document.getElementById('sr_reason_select').value;
+        const reasonNote = document.getElementById('sr_reason_note').value.trim();
+        const reason = reasonNote ? `${reasonSel}: ${reasonNote}` : reasonSel;
+        const refundCash = parseFloat(document.getElementById('sr_cash').value) || 0;
+        const refundUpi  = parseFloat(document.getElementById('sr_upi').value)  || 0;
+        const saleId     = parseInt(document.getElementById('sr_sale_id').value) || null;
+
+        // Build rich confirmation message
+        const itemLines = itemsToReturn.map(i => {
+            const lineTotal = i.return_qty * i.price * (1 - (i.discount || 0) / 100);
+            const condLabel = i.condition === 'resellable' ? '(stock restored)' : `(${i.condition} — stock NOT restored)`;
+            return `${i.product_name}: ${i.return_qty} × ₹${i.price} = ₹${lineTotal.toFixed(2)} ${condLabel}`;
+        }).join('\n');
+
+        const totalAmt = itemsToReturn.reduce((s, i) =>
+            s + i.return_qty * i.price * (1 - (i.discount || 0) / 100), 0);
+
+        const confirmed = await kiranaConfirm(
+            'Confirm Return',
+            `Items:\n${itemLines}\n\nReturn Total: ₹${totalAmt.toFixed(2)}\nRefund: Cash ₹${refundCash.toFixed(2)}, UPI ₹${refundUpi.toFixed(2)}\nReason: ${reason}\n\nThis cannot be undone.`
+        );
+        if (!confirmed) return;
+
+        const items = itemsToReturn.map(i => ({
+            sale_item_id:     i.sale_item_id || null,
+            product_id:       i.product_id,
+            quantity:         i.return_qty,
+            price:            i.price,
+            discount:         i.discount || 0,
+            return_condition: i.condition || 'resellable'
+        }));
+
+        const payload = { sale_id: saleId, items, refund_cash: refundCash, refund_upi: refundUpi, reason };
+
+        _submitting = true;
+        const btn = document.getElementById('srSubmitBtn');
+        const origLabel = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '⏳ Processing...';
+
+        try {
+            const res  = await fetch('/api/v1/sale-return', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            if (!res.ok) return showToast(json.message || json.error || 'Failed', 'error');
+            const data = json?.data || json;
+            showToast(`✅ Return ${data.return_number} recorded`, 'success');
+            closeModal('srModal');
+            _analyticsLoaded = false;
+            loadData();
+        } catch (err) {
+            console.error('[saveSR]', err);
+            showToast('Network error. Please try again.', 'error');
+        } finally {
+            _submitting = false;
+            btn.disabled = false;
+            btn.textContent = origLabel;
+        }
+    }
+
+    // ── Analytics ─────────────────────────────────────────────────────────────
+    async function toggleAnalytics() {
+        const panel = document.getElementById('analyticsPanel');
+        const isOpen = panel.dataset.open === '1';
+
+        if (isOpen) {
+            panel.style.maxHeight = '0';
+            panel.style.opacity   = '0';
+            panel.style.paddingTop    = '0';
+            panel.style.paddingBottom = '0';
+            panel.style.marginBottom  = '0';
+            panel.dataset.open = '0';
+            const btn = document.getElementById('analyticsToggleBtn');
+            if (btn) btn.textContent = '📊 Analytics';
+            return;
+        }
+
+        // Open
+        panel.style.paddingTop    = '20px';
+        panel.style.paddingBottom = '20px';
+        panel.style.marginBottom  = '18px';
+        panel.style.maxHeight = '800px';
+        panel.style.opacity   = '1';
+        panel.dataset.open    = '1';
+        const btn = document.getElementById('analyticsToggleBtn');
+        if (btn) btn.textContent = '✕ Hide Analytics';
+
+        if (_analyticsLoaded) return;
+
+        try {
+            const res  = await fetch('/api/v1/sale-returns/analytics');
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.message);
+            const d = json.data;
+
+            document.getElementById('analyticsStats').innerHTML = `
+                <div class="stat-card blue"><div class="stat-label">Total Returns</div>
+                    <div class="stat-value">${d.totals?.total_returns || 0}</div></div>
+                <div class="stat-card orange"><div class="stat-label">Total Value</div>
+                    <div class="stat-value">${fmt(d.totals?.total_value)}</div></div>
+                <div class="stat-card green"><div class="stat-label">Cash Refunded</div>
+                    <div class="stat-value">${fmt(d.totals?.total_cash)}</div></div>
+                <div class="stat-card cyan"><div class="stat-label">UPI Refunded</div>
+                    <div class="stat-value">${fmt(d.totals?.total_upi)}</div></div>`;
+
+            document.getElementById('analyticsTopProducts').innerHTML =
+                (d.top_returned_products || []).length === 0
+                ? '<p style="color:var(--text-muted);font-size:13px;">No data yet</p>'
+                : (d.top_returned_products || []).map(p =>
+                    `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px;">
+                        <span>${p.product_name || 'Unknown'}</span>
+                        <span style="color:var(--text-muted);">${p.total_returned_qty} units</span>
+                    </div>`).join('');
+
+            document.getElementById('analyticsReasons').innerHTML =
+                (d.reason_breakdown || []).length === 0
+                ? '<p style="color:var(--text-muted);font-size:13px;">No data yet</p>'
+                : (d.reason_breakdown || []).map(r =>
+                    `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px;">
+                        <span>${r.reason}</span>
+                        <span style="color:var(--text-muted);">${r.count} return${r.count !== 1 ? 's' : ''}</span>
+                    </div>`).join('');
+
+            _analyticsLoaded = true;
+        } catch (err) {
+            showToast('Failed to load analytics: ' + err.message, 'error');
+            panel.style.maxHeight = '0';
+            panel.style.opacity   = '0';
+            panel.style.paddingTop    = '0';
+            panel.style.paddingBottom = '0';
+            panel.style.marginBottom  = '0';
+            panel.dataset.open    = '0';
+            if (btn) btn.textContent = '📊 Analytics';
+        }
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    async function loadSettings() {
+        try {
+            const res  = await fetch('/api/v1/invoice-settings');
+            const json = await res.json();
+            if (res.ok && json.data) {
+                _returnWindowDays = json.data.return_window_days ?? 7;
+            }
+        } catch (e) { /* silently fail, default of 7 days is fine */ }
+    }
+
+    loadData().then(() => {
+        // Pre-fill from ?invoice= param (linked from sales.html return badges)
+        const urlParams = new URLSearchParams(window.location.search);
+        const invoiceParam = urlParams.get('invoice');
+        if (invoiceParam) {
+            const searchEl = document.getElementById('searchReturn');
+            if (searchEl) {
+                searchEl.value = invoiceParam;
+                if (typeof filterReturns === 'function') filterReturns();
+            }
+            const tableCard = document.querySelector('#srTable')?.closest('.glass-card');
+            if (tableCard) tableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+    loadSettings();
+
+    document.addEventListener('keydown', function(e) {
+        if (e.altKey && e.key === 'n') {
+            const anyModalOpen = document.querySelector('.modal-overlay.open');
+            if (!anyModalOpen) {
+                e.preventDefault();
+                openAddModal();
+            }
+            return;
+        }
+        if (e.key === 'Escape') {
+            const openModal = document.querySelector('.modal-overlay.open');
+            if (openModal) {
+                openModal.classList.remove('open');
+            }
+            return;
+        }
+    });
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Select Account</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a0f1e;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(16, 217, 160, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+            font-family: 'Inter', sans-serif;
+            padding: 24px;
+        }
+
+        .page-wrapper {
+            width: 100%;
+            max-width: 680px;
+            text-align: center;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Brand */
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #10d9a0, #3b82f6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .brand-text h2 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #f0f4fc;
+            text-align: left;
+            line-height: 1.1;
+        }
+
+        .brand-text span {
+            font-size: 11px;
+            color: #4a5c80;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .page-title {
+            font-size: 15px;
+            color: #8ba0c8;
+            margin-bottom: 40px;
+            font-weight: 500;
+        }
+
+        /* Profile Grid */
+        .profiles-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: center;
+            margin-bottom: 32px;
+        }
+
+        .profile-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .profile-card:hover {
+            transform: translateY(-6px);
+        }
+
+        .profile-card:hover .profile-avatar {
+            box-shadow: 0 0 0 3px rgba(16, 217, 160, 0.5), 0 16px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .profile-avatar {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 800;
+            color: #fff;
+            border: 3px solid transparent;
+            background-clip: padding-box;
+            transition: box-shadow 0.25s ease;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-avatar.role-admin {
+            background: linear-gradient(135deg, #10d9a0 0%, #0891b2 100%);
+        }
+
+        .profile-avatar.role-worker {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+
+        .profile-name {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .profile-role {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 99px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .profile-role.role-admin {
+            background: rgba(16, 217, 160, 0.15);
+            color: #10d9a0;
+        }
+
+        .profile-role.role-worker {
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+        }
+
+        /* Add Worker Card */
+        .add-profile-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .add-profile-card:hover {
+            transform: translateY(-6px);
+        }
+
+        .add-avatar {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            border: 2px dashed #2a3a5c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #4a5c80;
+            transition: border-color 0.2s, color 0.2s, transform 0.2s;
+        }
+
+        .add-profile-card:hover .add-avatar {
+            border-color: #10d9a0;
+            color: #10d9a0;
+            transform: translateY(-6px);
+        }
+
+        .add-label {
+            font-size: 13px;
+            color: #4a5c80;
+            font-weight: 500;
+        }
+
+        .add-profile-card:hover .add-label {
+            color: #10d9a0;
+        }
+
+        /* Footer hint */
+        .page-footer {
+            font-size: 12px;
+            color: #2a3a5c;
+            margin-top: 16px;
+        }
+
+        /* ─── Modal ───────────────────────────────────────────────── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: #0f1521;
+            border: 1px solid #1e2d45;
+            border-radius: 20px;
+            padding: 36px 32px;
+            width: 100%;
+            max-width: 400px;
+            transform: scale(0.95) translateY(16px);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .modal-overlay.open .modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f0f4fc;
+            margin-bottom: 6px;
+        }
+
+        .modal .modal-sub {
+            font-size: 12.5px;
+            color: #4a5c80;
+            margin-bottom: 24px;
+        }
+
+        .modal .form-group {
+            margin-bottom: 16px;
+        }
+
+        .modal .form-group label {
+            display: block;
+            font-size: 12px;
+            color: #8ba0c8;
+            font-weight: 600;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .modal .form-group input {
+            width: 100%;
+            background: #141c2e;
+            border: 1px solid #1e2d45;
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #f0f4fc;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .modal .form-group input:focus {
+            border-color: #10d9a0;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .btn-modal-cancel {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid #1e2d45;
+            border-radius: 10px;
+            color: #8ba0c8;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .btn-modal-cancel:hover {
+            border-color: #4a5c80;
+            color: #f0f4fc;
+        }
+
+        .btn-modal-submit {
+            flex: 1.5;
+            padding: 10px;
+            background: linear-gradient(135deg, #10d9a0, #0891b2);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-modal-submit:hover {
+            opacity: 0.88;
+        }
+
+        .btn-modal-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: #4a5c80;
+            font-size: 22px;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .modal-close-btn:hover {
+            color: #f0f4fc;
+        }
+
+        .modal-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            color: #ef4444;
+            font-size: 12.5px;
+            padding: 8px 12px;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        .modal-success {
+            background: rgba(16, 217, 160, 0.1);
+            border: 1px solid rgba(16, 217, 160, 0.2);
+            border-radius: 8px;
+            color: #10d9a0;
+            font-size: 12.5px;
+            padding: 8px 12px;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        /* Skeleton loader */
+        .skeleton-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .skeleton-circle {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: linear-gradient(90deg, #0f1521 25%, #1e2d45 50%, #0f1521 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+        }
+
+        .skeleton-line {
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #0f1521 25%, #1e2d45 50%, #0f1521 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+
+        <div class="brand">
+            <div class="brand-icon">K</div>
+            <div class="brand-text">
+                <h2>Kirana ERP</h2>
+                <span>Business Suite</span>
+            </div>
+        </div>
+
+        <p class="page-title">Who's working today?</p>
+
+        <div class="profiles-grid" id="profilesGrid">
+            <!-- skeleton placeholders -->
+            <div class="skeleton-card">
+                <div class="skeleton-circle"></div>
+                <div class="skeleton-line" style="width:60px;"></div>
+                <div class="skeleton-line" style="width:40px; height:10px;"></div>
+            </div>
+            <div class="skeleton-card">
+                <div class="skeleton-circle"></div>
+                <div class="skeleton-line" style="width:60px;"></div>
+                <div class="skeleton-line" style="width:40px; height:10px;"></div>
+            </div>
+        </div>
+
+        <p class="page-footer">Protected by Industry Standard Security</p>
+    </div>
+
+    <!-- Add Worker Modal -->
+    <div class="modal-overlay" id="addWorkerModal">
+        <div class="modal">
+            <button class="modal-close-btn" onclick="closeModal()">×</button>
+            <h3>➕ Add Worker</h3>
+            <p class="modal-sub">Create a new worker account for your store.</p>
+
+            <div class="modal-error" id="modalError"></div>
+            <div class="modal-success" id="modalSuccess"></div>
+
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="newName" placeholder="e.g. Ravi Kumar" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="newUsername" placeholder="e.g. ravi" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Password / PIN</label>
+                <input type="password" id="newPassword" placeholder="••••••••" autocomplete="new-password">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-modal-submit" id="createBtn" onclick="createWorker()">Create Account</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ─── Already logged in? Skip straight to dashboard ───────────────
+        const existingToken = localStorage.getItem('token');
+        const existingRole = localStorage.getItem('role');
+        if (existingToken) {
+            window.location.href = existingRole === 'admin' ? 'index.html' : 'billing.html';
+        }
+
+        const isAdmin = () => !!localStorage.getItem('token') && localStorage.getItem('role') === 'admin';
+
+        // ─── Fetch & Render Profiles ──────────────────────────────────────
+        async function loadProfiles() {
+            try {
+                const res = await fetch('/api/v1/users/list');
+                const data = await res.json();
+                renderProfiles(data.data || []);
+            } catch (e) {
+                document.getElementById('profilesGrid').innerHTML =
+                    `<p style="color:#ef4444;font-size:13px;">⚠️ Cannot reach server. Is it running?</p>`;
+            }
+        }
+
+        function renderProfiles(users) {
+            const grid = document.getElementById('profilesGrid');
+            let html = '';
+
+            users.forEach(u => {
+                const initials = u.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+                const roleClass = u.role === 'admin' ? 'role-admin' : 'role-worker';
+                const roleLabel = u.role === 'admin' ? 'Admin' : 'Worker';
+
+                html += `
+                <div class="profile-card" onclick="selectUser('${u.username}', '${u.name}', '${u.role}')">
+                    <div class="profile-avatar ${roleClass}">${initials}</div>
+                    <span class="profile-name">${u.name}</span>
+                    <span class="profile-role ${roleClass}">${roleLabel}</span>
+                </div>`;
+            });
+
+            // Add Worker button — always shown, but will show auth error if clicked without admin login
+            html += `
+            <div class="add-profile-card" onclick="handleAddWorker()">
+                <div class="add-avatar">＋</div>
+                <span class="add-label">Add Worker</span>
+            </div>`;
+
+            grid.innerHTML = html;
+        }
+
+        // ─── Select a Profile → go to unlock screen ───────────────────────
+        function selectUser(username, name, role) {
+            sessionStorage.setItem('selectedUsername', username);
+            sessionStorage.setItem('selectedName', name);
+            sessionStorage.setItem('selectedRole', role);
+            window.location.href = 'unlock.html';
+        }
+
+        // ─── Add Worker ───────────────────────────────────────────────────
+        function handleAddWorker() {
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+            if (!token || role !== 'admin') {
+                showInfoBanner('Please log in as Admin first to add workers. Select your Admin profile to continue.');
+                return;
+            }
+            document.getElementById('addWorkerModal').classList.add('open');
+        }
+
+        function showInfoBanner(msg) {
+            const existing = document.querySelector('.info-banner');
+            if (existing) existing.remove();
+            const banner = document.createElement('div');
+            banner.className = 'info-banner warning';
+            banner.style.cssText = 'margin-bottom:24px; max-width:680px; margin-left:auto; margin-right:auto;';
+            banner.innerHTML = `<span class="banner-icon">⚠️</span><span>${msg}</span><button class="banner-dismiss" onclick="this.parentElement.remove()">✕</button>`;
+            document.querySelector('.page-wrapper').insertBefore(banner, document.querySelector('.profiles-grid'));
+            setTimeout(() => banner.remove(), 6000);
+        }
+
+        function closeModal() {
+            document.getElementById('addWorkerModal').classList.remove('open');
+            document.getElementById('newName').value = '';
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('modalError').style.display = 'none';
+            document.getElementById('modalSuccess').style.display = 'none';
+        }
+
+        // Close modal on overlay click
+        document.getElementById('addWorkerModal').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+
+        async function createWorker() {
+            const name = document.getElementById('newName').value.trim();
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value;
+            const errEl = document.getElementById('modalError');
+            const sucEl = document.getElementById('modalSuccess');
+            const btn = document.getElementById('createBtn');
+
+            errEl.style.display = 'none';
+            sucEl.style.display = 'none';
+
+            if (!name || !username || !password) {
+                errEl.textContent = 'All fields are required.';
+                errEl.style.display = 'block';
+                return;
+            }
+            if (password.length < 4) {
+                errEl.textContent = 'Password must be at least 4 characters.';
+                errEl.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch('/api/v1/users/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name, username, password, role: 'worker' })
+                });
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    errEl.textContent = data.message || 'Failed to create worker.';
+                    errEl.style.display = 'block';
+                } else {
+                    sucEl.textContent = `✅ Worker "${name}" created successfully!`;
+                    sucEl.style.display = 'block';
+                    document.getElementById('newName').value = '';
+                    document.getElementById('newUsername').value = '';
+                    document.getElementById('newPassword').value = '';
+                    // Refresh profiles after short delay
+                    setTimeout(() => {
+                        closeModal();
+                        loadProfiles();
+                    }, 1400);
+                }
+            } catch (e) {
+                errEl.textContent = 'Network error. Cannot reach server.';
+                errEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+            }
+        }
+
+        loadProfiles();
+    </script>
+</body>
+
+</html>

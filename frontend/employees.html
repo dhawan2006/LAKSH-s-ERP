@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Employees & Access</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">K</div>
+                    <div class="brand-text">
+                        <h2>Kirana ERP</h2>
+                        <span>Business Suite</span>
+                    </div>
+                </div>
+            </div>
+            <nav id="navMenu">
+                <div class="sidebar-section-label">Main Menu</div>
+                <a href="index.html"><span class="nav-icon">⊞</span> Dashboard</a>
+                <a href="billing.html"><span class="nav-icon">🧾</span> POS Billing</a>
+                <a href="products.html"><span class="nav-icon">📦</span> Products</a>
+                <a href="categories.html"><span class="nav-icon">🏷️</span> Categories</a>
+                <a href="customers.html"><span class="nav-icon">👥</span> Customers</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Purchase</div>
+                <a href="purchase-orders.html"><span class="nav-icon">📋</span> Purchase Orders</a>
+                <a href="purchases.html"><span class="nav-icon">🛒</span> Purchases</a>
+                <a href="purchase-returns.html"><span class="nav-icon">↩️</span> Purchase Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Sales</div>
+                <a href="sale-orders.html"><span class="nav-icon">📑</span> Sale Orders</a>
+                <a href="sales.html"><span class="nav-icon">📊</span> Sales History</a>
+                <a href="sale-returns.html"><span class="nav-icon">🔄</span> Sale Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Finance & Admin</div>
+                <a href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+                <a href="profit-loss.html"><span class="nav-icon">💹</span> Profit &amp; Loss</a>
+                <a href="register.html"><span class="nav-icon">🗃️</span> Register</a>
+                <a href="settings-invoice.html"><span class="nav-icon">⚙️</span> Invoice Settings</a>
+                <a href="employees.html" class="active"><span class="nav-icon">🛡️</span> Access Control</a>
+                <a href="backup.html"><span class="nav-icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="store-avatar">A</div>
+                    <div class="store-info">
+                        <h4>Admin</h4>
+                        <span>Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <div class="main">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h3>Access Control</h3>
+                    <div class="breadcrumb">Manage Employees and View Activity Logs</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="status-pill"><span class="status-dot online"></span><span
+                            style="color:var(--success)">Online</span></div>
+                </div>
+            </div>
+
+            <div class="content grid" style="grid-template-columns: 1fr 1.6fr; gap: 20px;">
+
+                <!-- System Users -->
+                <div class="glass-card" style="padding: 20px;">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">System Users</div>
+                            <div class="card-subtitle">Registered staff accounts</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersBody">
+                                <tr>
+                                    <td colspan="3" style="text-align:center;">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Activity Logs -->
+                <div class="glass-card" style="padding: 20px;">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Security & Activity Log</div>
+                            <div class="card-subtitle">Recent actions across the system</div>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="loadLogs()">🔄 Refresh</button>
+                    </div>
+
+                    <div class="table-wrapper" style="max-height: 600px; overflow-y: auto;">
+                        <table style="font-size: 13px;">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsBody">
+                                <tr>
+                                    <td colspan="4" style="text-align:center;">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        function showToast(msg, type = 'info') {
+            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.innerHTML = `<span>${icons[type]}</span><span class="toast-msg">${msg}</span>`;
+            document.getElementById('toastContainer').appendChild(el);
+            setTimeout(() => el.remove(), 3500);
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await window.fetch('/api/v1/employees');
+                const { data } = await res.json();
+
+                document.getElementById('usersBody').innerHTML = data.map(u => `
+                    <tr>
+                        <td style="font-weight:600; color:var(--text-primary);">${u.name}</td>
+                        <td>${u.username}</td>
+                        <td><span class="badge ${u.role === 'admin' ? 'badge-primary' : 'badge-info'}">${u.role}</span></td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                showToast('Failed to load users', 'error');
+            }
+        }
+
+        async function loadLogs() {
+            try {
+                const res = await window.fetch('/api/v1/activity-logs');
+                const { data } = await res.json();
+
+                document.getElementById('logsBody').innerHTML = data.map(l => `
+                    <tr>
+                        <td style="color:var(--text-muted);">${new Date(l.created_at).toLocaleString('en-IN')}</td>
+                        <td>${l.user_name} <span style="font-size:10px; opacity:0.6;">(${l.user_role})</span></td>
+                        <td><span class="badge badge-muted">${l.action}</span></td>
+                        <td style="color:var(--text-primary);">${l.details}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                showToast('Failed to load logs', 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUsers();
+            loadLogs();
+        });
+    </script>
+</body>
+
+</html>

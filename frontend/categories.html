@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana ERP — Categories</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">K</div>
+                    <div class="brand-text">
+                        <h2>Kirana ERP</h2><span>Business Suite</span>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <div class="sidebar-section-label">Main Menu</div>
+                <a href="index.html"><span class="nav-icon">⊞</span> Dashboard</a>
+                <a href="billing.html"><span class="nav-icon">🧾</span> POS Billing</a>
+                <a href="products.html"><span class="nav-icon">📦</span> Products</a>
+                <a href="categories.html" class="active"><span class="nav-icon">🏷️</span> Categories</a>
+                <a href="customers.html"><span class="nav-icon">👥</span> Customers</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Purchase</div>
+                <a href="purchase-orders.html"><span class="nav-icon">📋</span> Purchase Orders</a>
+                <a href="purchases.html"><span class="nav-icon">🛒</span> Purchases</a>
+                <a href="purchase-returns.html"><span class="nav-icon">↩️</span> Purchase Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Sales</div>
+                <a href="sale-orders.html"><span class="nav-icon">📑</span> Sale Orders</a>
+                <a href="sales.html"><span class="nav-icon">📊</span> Sales History</a>
+                <a href="sale-returns.html"><span class="nav-icon">🔄</span> Sale Returns</a>
+                <div class="sidebar-section-label" style="margin-top:14px;">Finance</div>
+                <a href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+                <a href="profit-loss.html"><span class="nav-icon">💹</span> Profit & Loss</a>
+                <a href="register.html"><span class="nav-icon">🗃️</span> Register</a>
+                <a href="settings-invoice.html"><span class="nav-icon">⚙️</span> Invoice Settings</a>
+                <a href="backup.html"><span class="nav-icon">💾</span> Backup</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-info">
+                    <div class="store-avatar">S</div>
+                    <div class="store-info">
+                        <h4>Store Admin</h4><span>Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="main">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h3>Categories</h3>
+                    <div class="breadcrumb">Organise your product catalogue</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="status-pill"><span class="status-dot online"></span><span
+                            style="color:var(--success)">Online</span></div><button class="btn btn-primary"
+                        onclick="openAdd()">+ Add Category</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="grid grid-4 mb-20">
+                    <div class="stat-card blue"><span class="stat-icon">🏷️</span>
+                        <div class="stat-label">Total Categories</div>
+                        <div class="stat-value" id="stat-total">0</div>
+                    </div>
+                    <div class="stat-card green"><span class="stat-icon">📦</span>
+                        <div class="stat-label">Products Mapped</div>
+                        <div class="stat-value" id="stat-mapped">0</div>
+                    </div>
+                    <div class="stat-card orange"><span class="stat-icon">🔵</span>
+                        <div class="stat-label">Unmapped Products</div>
+                        <div class="stat-value" id="stat-unmapped">0</div>
+                    </div>
+                    <div class="stat-card cyan"><span class="stat-icon">✅</span>
+                        <div class="stat-label">Active</div>
+                        <div class="stat-value" id="stat-active">0</div>
+                    </div>
+                </div>
+                <div class="glass-card" style="padding:20px 22px; margin-bottom:18px;">
+                    <div class="card-header mb-16">
+                        <div>
+                            <div class="card-title">Category List</div>
+                            <div class="card-subtitle" id="tableCount">Loading...</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Category Name</th>
+                                    <th>Description</th>
+                                    <th>Products</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoryTable">
+                                <tr>
+                                    <td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);">
+                                        Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="categoryModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="modalTitle">Add Category</div>
+                </div>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <input type="hidden" id="cat_id">
+            <div class="form-group"><label>Category Name *</label><input type="text" id="cat_name"
+                    placeholder="e.g. Beverages"></div>
+            <div class="form-group"><label>Description</label><input type="text" id="cat_desc"
+                    placeholder="Optional description"></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveCategory()">💾 Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <div class="confirm-overlay" id="confirmOverlay">
+        <div class="confirm-dialog">
+            <div class="confirm-icon danger" id="confirmIcon">🗑️</div>
+            <div class="confirm-title" id="confirmTitle">Delete Item?</div>
+            <div class="confirm-message" id="confirmMessage">This action cannot be undone.</div>
+            <div class="confirm-actions">
+                <button class="btn btn-outline" id="confirmCancel">Cancel</button>
+                <button class="btn btn-danger" id="confirmOk">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        let allCats = [];
+        function showToast(msg, type = 'info') {
+            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+            const el = document.createElement('div'); el.className = `toast ${type}`;
+            el.innerHTML = `<span>${icons[type]}</span><span class="toast-msg">${msg}</span><button class="toast-close" onclick="this.parentElement.remove()">✕</button>`;
+            document.getElementById('toastContainer').appendChild(el); setTimeout(() => el.remove(), 3500);
+        }
+        function showConfirm({ title, message, icon = '🗑️', type = 'danger', confirmText = 'Delete', onConfirm }) {
+            const overlay = document.getElementById('confirmOverlay');
+            document.getElementById('confirmIcon').textContent = icon;
+            document.getElementById('confirmIcon').className = 'confirm-icon ' + type;
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            const okBtn = document.getElementById('confirmOk');
+            okBtn.textContent = confirmText;
+            okBtn.className = type === 'danger' ? 'btn btn-danger' : 'btn btn-primary';
+            overlay.classList.add('open');
+            const cleanup = () => { overlay.classList.remove('open'); okBtn.onclick = null; cancelBtn.onclick = null; };
+            const cancelBtn = document.getElementById('confirmCancel');
+            cancelBtn.onclick = cleanup;
+            okBtn.onclick = () => { cleanup(); onConfirm(); };
+            overlay.onclick = (e) => { if (e.target === overlay) cleanup(); };
+            const escHandler = (e) => { if (e.key === 'Escape') { cleanup(); document.removeEventListener('keydown', escHandler); } };
+            document.addEventListener('keydown', escHandler);
+        }
+        function openModal() { document.getElementById('categoryModal').classList.add('open'); }
+        function closeModal() { document.getElementById('categoryModal').classList.remove('open'); }
+
+        async function loadCategories() {
+            const [catRes, prodRes] = await Promise.all([fetch('/api/v1/categories'), fetch('/api/v1/products?limit=200')]);
+            const _catJson = await catRes.json(); allCats = _catJson?.data?.data || _catJson?.data || _catJson;
+            const prodJson = await prodRes.json();
+            const prods = prodJson?.data?.data || prodJson?.data || prodJson;
+            const mapped = prods.filter(p => p.category_id).length;
+            document.getElementById('stat-total').textContent = allCats.length;
+            document.getElementById('stat-mapped').textContent = mapped;
+            document.getElementById('stat-unmapped').textContent = prods.length - mapped;
+            document.getElementById('stat-active').textContent = allCats.length;
+            document.getElementById('tableCount').textContent = allCats.length + ' categories';
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('categoryTable');
+            if (!allCats.length) { tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><span class="empty-state-icon">🏷️</span><h4>No categories yet</h4></div></td></tr>`; return; }
+            tbody.innerHTML = allCats.map(c => `
+        <tr>
+            <td class="text-muted" style="font-size:11.5px;">#${c.id}</td>
+            <td class="td-primary">${c.name}</td>
+            <td style="color:var(--text-muted);font-size:12.5px;">${c.description || '—'}</td>
+            <td><span class="badge badge-info">${c.product_count} products</span></td>
+            <td>
+                <div class="flex gap-6">
+                    <button class="btn btn-ghost btn-sm" onclick="editCat(${c.id})">✏️ Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteCat(${c.id})">🗑️</button>
+                </div>
+            </td>
+        </tr>`).join('');
+        }
+
+        function openAdd() {
+            document.getElementById('modalTitle').textContent = 'Add Category';
+            document.getElementById('cat_id').value = '';
+            document.getElementById('cat_name').value = '';
+            document.getElementById('cat_desc').value = '';
+            openModal();
+        }
+        function editCat(id) {
+            const c = allCats.find(x => x.id == id);
+            document.getElementById('modalTitle').textContent = 'Edit Category';
+            document.getElementById('cat_id').value = c.id;
+            document.getElementById('cat_name').value = c.name;
+            document.getElementById('cat_desc').value = c.description || '';
+            openModal();
+        }
+        async function saveCategory() {
+            const id = document.getElementById('cat_id').value;
+            const name = document.getElementById('cat_name').value.trim();
+            const description = document.getElementById('cat_desc').value.trim();
+            if (!name) return showToast('Name is required', 'error');
+            const url = id ? `/api/v1/update-category/${id}` : '/api/v1/add-category';
+            const res = await fetch(url, { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, description }) });
+            const data = await res.json();
+            if (!res.ok) return showToast(data.message || data.error || 'Error', 'error');
+            showToast(id ? 'Category updated!' : 'Category added!', 'success');
+            closeModal(); loadCategories();
+        }
+        async function deleteCat(id) {
+            const c = allCats.find(x => x.id == id);
+            showConfirm({
+                title: 'Delete Category?',
+                message: `Are you sure you want to delete "${c.name}"? Products in this category will become uncategorised.`,
+                icon: '🗑️',
+                type: 'danger',
+                confirmText: 'Delete',
+                onConfirm: async () => {
+                    const res = await fetch(`/api/v1/delete-category/${id}`, { method: 'DELETE' });
+                    const data = await res.json().catch(() => ({}));
+                    if (res.ok) { showToast('Category deleted', 'info'); loadCategories(); }
+                    else showToast(data.message || data.error || 'Delete failed', 'error');
+                }
+            });
+        }
+        loadCategories();
+    </script>
+</body>
+
+</html>

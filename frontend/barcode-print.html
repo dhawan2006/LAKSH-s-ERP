@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Print — Kirana ERP</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; color: #333; }
+        .controls {
+            background: #fff; padding: 14px 20px; border-bottom: 1px solid #ddd;
+            display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;
+        }
+        .controls h2 { margin-right: auto; font-size: 15px; color: #111; align-self: center; }
+        .ctrl-group { display: flex; flex-direction: column; gap: 3px; }
+        .ctrl-group label { font-size: 11px; color: #666; }
+        .ctrl-group input, .ctrl-group select {
+            border: 1px solid #ddd; border-radius: 4px; padding: 5px 8px; font-size: 12.5px;
+        }
+        .btn { padding: 7px 14px; border-radius: 5px; border: none; cursor: pointer; font-size: 12.5px; font-weight: 600; }
+        .btn-primary { background: #3b82f6; color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid #ddd; color: #333; }
+        .preview-area { padding: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+        .barcode-label {
+            background: #fff; border: 1px solid #aaa; border-radius: 3px;
+            padding: 7px 8px; text-align: center; width: 53mm;
+            display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+        }
+        .lbl-store { font-size: 8.5px; color: #888; letter-spacing: 0.4px; text-transform: uppercase; }
+        .lbl-name { font-size: 11px; font-weight: 700; color: #111; max-width: 50mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lbl-img img { width: 47mm; height: auto; display: block; }
+        .lbl-prices { display: flex; gap: 8px; align-items: baseline; margin-top: 1px; }
+        .lbl-price { font-size: 12.5px; font-weight: 800; color: #111; }
+        .lbl-mrp { font-size: 9.5px; color: #888; text-decoration: line-through; }
+        @media print {
+            .controls { display: none !important; }
+            body { background: #fff; }
+            .preview-area { padding: 3mm; gap: 2mm; }
+            .barcode-label { border: 0.5pt solid #999; break-inside: avoid; }
+        }
+    </style>
+    <script src="js/auth.js"></script>
+</head>
+<body>
+<div class="controls">
+    <h2>🖨️ Barcode Label Printer</h2>
+    <div class="ctrl-group">
+        <label>Copies</label>
+        <input type="number" id="copies" value="1" min="1" max="100" style="width:60px;">
+    </div>
+    <div class="ctrl-group">
+        <label>Show Name</label>
+        <select id="showName"><option value="1">Yes</option><option value="0">No</option></select>
+    </div>
+    <div class="ctrl-group">
+        <label>Show Price</label>
+        <select id="showPrice"><option value="1">Yes</option><option value="0">No</option></select>
+    </div>
+    <div class="ctrl-group">
+        <label>Show MRP</label>
+        <select id="showMrp"><option value="1">Yes</option><option value="0">No</option></select>
+    </div>
+    <div class="ctrl-group">
+        <label>Store Name</label>
+        <input type="text" id="storeName" placeholder="Your Store" style="width:130px;">
+    </div>
+    <button class="btn btn-outline" onclick="regenerate()">🔄 Refresh</button>
+    <button class="btn btn-primary" onclick="window.print()">🖨️ Print</button>
+    <button class="btn btn-outline" onclick="window.close()">✕ Close</button>
+</div>
+
+<div class="preview-area" id="previewArea">
+    <div style="color:#888;font-size:13px;padding:20px;">Loading...</div>
+</div>
+
+<script>
+const params   = new URLSearchParams(window.location.search);
+const code     = params.get('code') || '';
+const codesRaw = params.get('codes') || '';   // bulk mode: "barcode1|name1,barcode2|name2"
+const prodName = params.get('name') || '';
+const price    = params.get('price') || '';
+const mrp      = params.get('mrp') || '';
+
+// Build list of items to print: [{code, name, price, mrp}]
+function buildItemList() {
+    if (codesRaw) {
+        return codesRaw.split(',').map(entry => {
+            const pipeIdx = entry.indexOf('|');
+            const c = pipeIdx >= 0 ? entry.slice(0, pipeIdx) : entry;
+            const n = pipeIdx >= 0 ? entry.slice(pipeIdx + 1) : '';
+            try {
+                return { code: decodeURIComponent(c) || '', name: decodeURIComponent(n) || '', price: '', mrp: '' };
+            } catch {
+                return { code: c, name: n, price: '', mrp: '' };
+            }
+        }).filter(i => i.code);
+    }
+    if (code) {
+        return [{ code, name: prodName, price, mrp }];
+    }
+    return [];
+}
+
+function regenerate() {
+    const copies    = Math.min(100, parseInt(document.getElementById('copies').value) || 1);
+    const showName  = document.getElementById('showName').value === '1';
+    const showPrice = document.getElementById('showPrice').value === '1';
+    const showMrp   = document.getElementById('showMrp').value === '1';
+    const storeName = document.getElementById('storeName').value.trim();
+    const area      = document.getElementById('previewArea');
+    area.innerHTML  = '';
+
+    const items = buildItemList();
+    if (!items.length) {
+        area.innerHTML = '<div style="color:#888;font-size:13px;padding:20px;">No barcode data provided.</div>';
+        return;
+    }
+
+    for (const item of items) {
+        for (let i = 0; i < copies; i++) {
+            const label = document.createElement('div');
+            label.className = 'barcode-label';
+            let html = '';
+            if (storeName) html += `<div class="lbl-store">${storeName}</div>`;
+            if (showName && item.name) html += `<div class="lbl-name" title="${item.name}">${item.name}</div>`;
+            html += `<div class="lbl-img"><img src="/api/v1/barcode/${encodeURIComponent(item.code)}" alt="${item.code}" onerror="this.parentElement.innerHTML='<span style=font-size:11px;color:#888>${item.code}</span>'"></div>`;
+            if ((showPrice && item.price) || (showMrp && item.mrp && parseFloat(item.mrp) > 0)) {
+                html += `<div class="lbl-prices">`;
+                if (showPrice && item.price) html += `<span class="lbl-price">₹${parseFloat(item.price).toFixed(2)}</span>`;
+                if (showMrp && item.mrp && parseFloat(item.mrp) > 0) html += `<span class="lbl-mrp">MRP ₹${parseFloat(item.mrp).toFixed(2)}</span>`;
+                html += `</div>`;
+            }
+            label.innerHTML = html;
+            area.appendChild(label);
+        }
+    }
+}
+
+// Persist store name
+const saved = localStorage.getItem('kirana_store');
+if (saved) document.getElementById('storeName').value = saved;
+document.getElementById('storeName').addEventListener('input', e => localStorage.setItem('kirana_store', e.target.value));
+
+['copies','showName','showPrice','showMrp'].forEach(id =>
+    document.getElementById(id).addEventListener('change', regenerate));
+
+regenerate();
+</script>
+</body>
+</html>
